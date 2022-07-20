@@ -28,7 +28,7 @@ foreach (var prediction in predictions) // iterate predictions to draw results
 }
 
 ```
-![](https://github.com/iwaitu/Yolov7net/raw/master/Yolov7net.test/Assets/result.jpg)
+![](https://github.com/iwaitu/Yolov7net/raw/master/result.jpg)
 # References:
 
 https://github.com/mentalstack/yolov5-net
