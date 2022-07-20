@@ -13,7 +13,7 @@ using var yolo = new Yolov7("./assets/yolov7-tiny_640x640.onnx", true);
 // setup labels of onnx model 
 yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
 using var image = Image.FromFile("Assets/demo.jpg");
-var ret = yolo.Predict(image);
+var predictions = yolo.Predict(image);
 
 // draw box
 using var graphics = Graphics.FromImage(image);
