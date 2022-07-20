@@ -4,7 +4,7 @@
 
 Usage:
 
-![](https://github.com/iwaitu/Yolov7net/raw/master/Yolov7net.test/Assets/demo.jpg)
+![](https://github.com/ivilson/Yolov7net/raw/master/test/Yolov7net.test/Assets/demo.jpg)
 
 
 ```csharp
