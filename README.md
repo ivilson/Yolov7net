@@ -32,3 +32,4 @@ foreach (var prediction in predictions) // iterate predictions to draw results
 # References & Acknowledgements
 
 https://github.com/mentalstack/yolov5-net
+https://github.com/ibaiGorordo/ONNX-YOLOv7-Object-Detection
