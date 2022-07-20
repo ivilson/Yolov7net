@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov7net", "Yolov7net\Yolov7net.csproj", "{7864954C-DB16-4C4F-9DEA-6C8BBF3F1163}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov7net", "src\Yolov7net\Yolov7net.csproj", "{7864954C-DB16-4C4F-9DEA-6C8BBF3F1163}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov7net.test", "Yolov7net.test\Yolov7net.test.csproj", "{A3A4B630-0D0F-4BA2-9AEC-EDA2651DD8DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov7net.test", "test\Yolov7net.test\Yolov7net.test.csproj", "{A3A4B630-0D0F-4BA2-9AEC-EDA2651DD8DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
