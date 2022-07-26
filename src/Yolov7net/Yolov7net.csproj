@@ -5,6 +5,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Authors>ivilson.com</Authors>
+    <Version>1.0.1</Version>
+    <Description>yolov7 onnx interface for .net 6</Description>
   </PropertyGroup>
 
   <ItemGroup>
