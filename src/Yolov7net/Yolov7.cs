@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Drawing;
 using Yolov7net.Extentions;
 using Yolov7net.Models;
-using Tensorflow.NumPy;
 
 
 namespace Yolov7net
