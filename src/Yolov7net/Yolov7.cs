@@ -49,10 +49,10 @@ namespace Yolov7net
 
         public List<YoloPrediction> Predict(Image image)
         {
-            return ParseDetect(Inference(image), image);
+            return ParseDetect(Inference(image)[0], image);
         }
 
-        private List<YoloPrediction> ParseDetect(DenseTensor<float>[] output, Image image)
+        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
         {
             var result = new ConcurrentBag<YoloPrediction>();
 
@@ -62,25 +62,21 @@ namespace Yolov7net
 
             var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2); // left, right pads
 
-            foreach(var item in output)
-            {
-                var label = _model.Labels[(int)item.GetValue(5)];
-                var prediction = new YoloPrediction(label, item.GetValue(6));
+            var label = _model.Labels[(int)output.GetValue(5)];
+            var prediction = new YoloPrediction(label, output.GetValue(6));
 
-                var xMin = (item.GetValue(1) - xPad) / gain;
-                var yMin = (item.GetValue(2) - yPad) / gain;
-                var xMax = (item.GetValue(1) - xPad) / gain;
-                var yMax = (item.GetValue(2) - yPad) / gain;
-                //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
-                //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
-                //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
-                //box -= tmp;
-                //box /= gain;
-                prediction.Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin);
-                result.Add(prediction);
-            }
+            var xMin = (output.GetValue(1) - xPad) / gain;
+            var yMin = (output.GetValue(2) - yPad) / gain;
+            var xMax = (output.GetValue(1) - xPad) / gain;
+            var yMax = (output.GetValue(2) - yPad) / gain;
+            //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
+            //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
+            //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
+            //box -= tmp;
+            //box /= gain;
+            prediction.Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin);
+            result.Add(prediction);
 
-            
             return result.ToList();
         }
 
