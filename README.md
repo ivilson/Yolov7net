@@ -8,7 +8,7 @@ install-package IVilson.AI.Yolov7net
 
 ![](https://github.com/ivilson/Yolov7net/raw/master/test/Yolov7net.test/Assets/demo.jpg)
 
-新版本的 yolov7 可以直接导出完成了 nms 操作的onnx 使用方法略有不同，需要使用 Yolov7 这个类
+新版本的 yolov7 可以直接导出包含nms操作结果的onnx， 使用方法略有不同，需要使用 Yolov7 这个类
 ```csharp
 // init Yolov5 with onnx file path
 using var yolo = new Yolov7("./assets/yolov7-tiny_640x640.onnx", true);
