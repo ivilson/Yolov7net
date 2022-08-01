@@ -70,16 +70,18 @@ namespace Yolov7net
                 var yMin = (output[i, 2] - yPad) / gain;
                 var xMax = (output[i, 3] - xPad) / gain;
                 var yMax = (output[i, 4] - yPad) / gain;
+
+                //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
+                //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
+                //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
+                //box -= tmp;
+                //box /= gain;
+
                 prediction.Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin);
                 result.Add(prediction);
             });
 
            
-            //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
-            //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
-            //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
-            //box -= tmp;
-            //box /= gain;
             
 
             return result.ToList();

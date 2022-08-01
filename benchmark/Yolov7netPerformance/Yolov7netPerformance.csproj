@@ -8,14 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.12.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Yolov7net\IVilson.AI.Yolov7net.csproj" />
+    <ProjectReference Include="..\..\src\Yolov7net\IVilson.AI.Yolov7net.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Assets\2dog.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\cat_224x224.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
