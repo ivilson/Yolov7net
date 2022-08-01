@@ -4,10 +4,12 @@ using System.Collections.Concurrent;
 using System.Drawing;
 using Yolov7net.Extentions;
 using Yolov7net.Models;
+using Tensorflow.NumPy;
+
 
 namespace Yolov7net
 {
-    public class Yolov7 : IDisposable
+    public  class Yolov7 : IDisposable
     {
         private readonly InferenceSession _inferenceSession;
         private YoloModel _model = new YoloModel();
@@ -25,8 +27,8 @@ namespace Yolov7net
                 SessionOptions opts = new();
                 _inferenceSession = new InferenceSession(ModelPath, opts);
             }
-            
-            
+
+
             /// Get model info
             get_input_details();
             get_output_details();
@@ -46,52 +48,41 @@ namespace Yolov7net
             SetupLabels(s);
         }
 
-        public List<YoloPrediction> Predict(Image image, float conf_thres = 0, float iou_thres = 0)
+        public List<YoloPrediction> Predict(Image image)
         {
-            if (conf_thres > 0f)
-            {
-                _model.Confidence = conf_thres;
-                _model.MulConfidence = conf_thres + 0.05f;
-            }
-            if (iou_thres > 0f)
-            {
-                _model.Overlap = iou_thres;
-            }
-            return Supress(ParseOutput(Inference(image), image));
+            return ParseDetect(Inference(image), image);
         }
 
-        /// <summary>
-        /// Removes overlaped duplicates (nms).
-        /// </summary>
-        private List<YoloPrediction> Supress(List<YoloPrediction> items)
+        private List<YoloPrediction> ParseDetect(DenseTensor<float>[] output, Image image)
         {
-            var result = new List<YoloPrediction>(items);
+            var result = new ConcurrentBag<YoloPrediction>();
 
-            foreach (var item in items) // iterate every prediction
+            var (w, h) = (image.Width, image.Height); // image w and h
+            var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h); // x, y gains
+            var gain = Math.Min(xGain, yGain); // gain = resized / original
+
+            var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2); // left, right pads
+
+            foreach(var item in output)
             {
-                foreach (var current in result.ToList()) // make a copy for each iteration
-                {
-                    if (current == item) continue;
+                var label = _model.Labels[(int)item.GetValue(5)];
+                var prediction = new YoloPrediction(label, item.GetValue(6));
 
-                    var (rect1, rect2) = (item.Rectangle, current.Rectangle);
-
-                    RectangleF intersection = RectangleF.Intersect(rect1, rect2);
-
-                    float intArea = intersection.Area(); // intersection area
-                    float unionArea = rect1.Area() + rect2.Area() - intArea; // union area
-                    float overlap = intArea / unionArea; // overlap ratio
-
-                    if (overlap >= _model.Overlap)
-                    {
-                        if (item.Score >= current.Score)
-                        {
-                            result.Remove(current);
-                        }
-                    }
-                }
+                var xMin = (item.GetValue(1) - xPad) / gain;
+                var yMin = (item.GetValue(2) - yPad) / gain;
+                var xMax = (item.GetValue(1) - xPad) / gain;
+                var yMax = (item.GetValue(2) - yPad) / gain;
+                //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
+                //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
+                //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
+                //box -= tmp;
+                //box /= gain;
+                prediction.Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin);
+                result.Add(prediction);
             }
 
-            return result;
+            
+            return result.ToList();
         }
 
         private DenseTensor<float>[] Inference(Image img)
@@ -124,69 +115,6 @@ namespace Yolov7net
             return output.ToArray();
         }
 
-        private List<YoloPrediction> ParseOutput(DenseTensor<float>[] output, Image image)
-        {
-            return _model.UseDetect ? ParseDetect(output[0], image) : ParseSigmoid(output, image);
-        }
-
-        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
-        {
-            var result = new ConcurrentBag<YoloPrediction>();
-
-            var (w, h) = (image.Width, image.Height); // image w and h
-            var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h); // x, y gains
-            var gain = Math.Min(xGain, yGain); // gain = resized / original
-
-            var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2); // left, right pads
-
-            Parallel.For(0, (int)output.Length / _model.Dimensions, (i) =>
-            {
-                if (output[0, i, 4] <= _model.Confidence) return; // skip low obj_conf results
-
-                Parallel.For(5, _model.Dimensions, (j) =>
-                {
-                    output[0, i, j] = output[0, i, j] * output[0, i, 4]; // mul_conf = obj_conf * cls_conf
-                });
-
-                Parallel.For(5, _model.Dimensions, (k) =>
-                {
-                    if (output[0, i, k] <= _model.MulConfidence) return; // skip low mul_conf results
-
-                    float xMin = ((output[0, i, 0] - output[0, i, 2] / 2) - xPad) / gain; // unpad bbox tlx to original
-                    float yMin = ((output[0, i, 1] - output[0, i, 3] / 2) - yPad) / gain; // unpad bbox tly to original
-                    float xMax = ((output[0, i, 0] + output[0, i, 2] / 2) - xPad) / gain; // unpad bbox brx to original
-                    float yMax = ((output[0, i, 1] + output[0, i, 3] / 2) - yPad) / gain; // unpad bbox bry to original
-
-                    xMin = Utils.Clamp(xMin, 0, w - 0); // clip bbox tlx to boundaries
-                    yMin = Utils.Clamp(yMin, 0, h - 0); // clip bbox tly to boundaries
-                    xMax = Utils.Clamp(xMax, 0, w - 1); // clip bbox brx to boundaries
-                    yMax = Utils.Clamp(yMax, 0, h - 1); // clip bbox bry to boundaries
-
-                    YoloLabel label = _model.Labels[k - 5];
-
-                    var prediction = new YoloPrediction(label, output[0, i, k])
-                    {
-                        Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
-                    };
-
-                    result.Add(prediction);
-                });
-            });
-
-            return result.ToList();
-        }
-
-        private List<YoloPrediction> ParseSigmoid(DenseTensor<float>[] output, Image image)
-        {
-            return new List<YoloPrediction>();
-        }
-
-        private void prepare_input(Image img)
-        {
-            Bitmap bmp = Utils.ResizeImage(img, _model.Width, _model.Height);
-
-        }
-
         private void get_input_details()
         {
             _model.Height = _inferenceSession.InputMetadata["images"].Dimensions[2];
@@ -196,13 +124,13 @@ namespace Yolov7net
         private void get_output_details()
         {
             _model.Outputs = _inferenceSession.OutputMetadata.Keys.ToArray();
-            _model.Dimensions = _inferenceSession.OutputMetadata[_model.Outputs[0]].Dimensions[2];
-            _model.UseDetect = !(_model.Outputs.Any(x=>x == "score"));
+            _model.Dimensions = _inferenceSession.OutputMetadata[_model.Outputs[0]].Dimensions[1];
+            _model.UseDetect = !(_model.Outputs.Any(x => x == "score"));
         }
 
         public void Dispose()
         {
-            _inferenceSession.Dispose(); 
+            _inferenceSession.Dispose();
         }
     }
 }
