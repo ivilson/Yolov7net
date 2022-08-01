@@ -62,20 +62,25 @@ namespace Yolov7net
 
             var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2); // left, right pads
 
-            var label = _model.Labels[(int)output.GetValue(5)];
-            var prediction = new YoloPrediction(label, output.GetValue(6));
+            Parallel.For(0, output.Dimensions[0], (i) => {
+                var label = _model.Labels[(int)output[i,5]];
+                var prediction = new YoloPrediction(label, output[0,6]);
 
-            var xMin = (output.GetValue(1) - xPad) / gain;
-            var yMin = (output.GetValue(2) - yPad) / gain;
-            var xMax = (output.GetValue(1) - xPad) / gain;
-            var yMax = (output.GetValue(2) - yPad) / gain;
+                var xMin = (output[i, 1] - xPad) / gain;
+                var yMin = (output[i, 2] - yPad) / gain;
+                var xMax = (output[i, 3] - xPad) / gain;
+                var yMax = (output[i, 4] - yPad) / gain;
+                prediction.Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin);
+                result.Add(prediction);
+            });
+
+           
             //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
             //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
             //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
             //box -= tmp;
             //box /= gain;
-            prediction.Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin);
-            result.Add(prediction);
+            
 
             return result.ToList();
         }
