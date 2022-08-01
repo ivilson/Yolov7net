@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IVilson.AI.Yolov7net", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yolov7net.test", "test\Yolov7net.test\Yolov7net.test.csproj", "{A3A4B630-0D0F-4BA2-9AEC-EDA2651DD8DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov7netPerformance", "Yolov7netPerformance\Yolov7netPerformance.csproj", "{FA98A940-CAC0-40F6-85B9-A01B9127C5CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yolov7netPerformance", "benchmark\Yolov7netPerformance\Yolov7netPerformance.csproj", "{1A94F92A-599D-41F0-B1AB-BE4455A3440E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{A3A4B630-0D0F-4BA2-9AEC-EDA2651DD8DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3A4B630-0D0F-4BA2-9AEC-EDA2651DD8DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3A4B630-0D0F-4BA2-9AEC-EDA2651DD8DD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA98A940-CAC0-40F6-85B9-A01B9127C5CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA98A940-CAC0-40F6-85B9-A01B9127C5CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA98A940-CAC0-40F6-85B9-A01B9127C5CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA98A940-CAC0-40F6-85B9-A01B9127C5CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A94F92A-599D-41F0-B1AB-BE4455A3440E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A94F92A-599D-41F0-B1AB-BE4455A3440E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A94F92A-599D-41F0-B1AB-BE4455A3440E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A94F92A-599D-41F0-B1AB-BE4455A3440E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
