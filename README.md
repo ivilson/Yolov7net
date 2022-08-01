@@ -3,6 +3,7 @@
 .net 6 yolov7 onnx runtime interface, work for https://github.com/WongKinYiu/yolov7
 
 Usage:
+install-package IVilson.AI.Yolov7net
 
 ![](https://github.com/ivilson/Yolov7net/raw/master/test/Yolov7net.test/Assets/demo.jpg)
 
