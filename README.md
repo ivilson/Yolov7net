@@ -53,6 +53,7 @@ foreach (var prediction in predictions) // iterate predictions to draw results
 ![](https://github.com/iwaitu/Yolov7net/raw/master/result.jpg)
 # References & Acknowledgements
 
+https://github.com/WongKinYiu/yolov7
+https://github.com/ultralytics/yolov5
 https://github.com/mentalstack/yolov5-net
-
 https://github.com/ibaiGorordo/ONNX-YOLOv7-Object-Detection
