@@ -30,7 +30,7 @@ foreach (var prediction in predictions) // iterate predictions to draw results
 }
 ```
 
-对于为包括nms 结果的模型，需要用到 yolov5 这个类
+对于未包括nms 结果的模型，需要用到 yolov5 这个类
 ```csharp
 // init Yolov5 with onnx file path
 using var yolo = new Yolov5("./assets/yolov7-tiny_640x640.onnx", true);
