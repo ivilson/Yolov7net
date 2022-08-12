@@ -10,7 +10,7 @@ install-package IVilson.AI.Yolov7net
 
 新版本的 yolov7 可以直接导出包含nms操作结果的onnx， 使用方法略有不同，需要使用 Yolov7 这个类
 ```csharp
-// init Yolov5 with onnx file path
+// init Yolov7 with onnx (include nms results)file path
 using var yolo = new Yolov7("./assets/yolov7-tiny_640x640.onnx", true);
 // setup labels of onnx model 
 yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
