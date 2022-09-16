@@ -11,7 +11,7 @@ namespace Yolov7net.test
         public void TestYolov7()
         {
             
-            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx"); //yolov7 Ä£ĞÍ,²»ĞèÒª nms ²Ù×÷
+            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx"); //yolov7 e2e æ¨¡å‹,ä¸éœ€è¦ nms æ“ä½œ
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
@@ -25,7 +25,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov5()
         {
-            using var yolo = new Yolov5("./assets/yolov7-tiny_640x640.onnx"); //yolov7 Ä£ĞÍ,²»ĞèÒª nms ²Ù×÷
+            using var yolo = new Yolov5("./assets/yolov7-tiny_640x640.onnx"); //yolov5 or yolov7 æ¨¡å‹, éœ€è¦ nms æ“ä½œ
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
