@@ -44,7 +44,7 @@ namespace Yolov7net.test
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
             using var image = Image.FromFile("Assets/demo.jpg");
-            var ret = yolo.Predict(image);
+            var ret = yolo.Predict(image,useNumpy:true);
             Assert.NotNull(ret);
             Assert.True(ret.Count == 1);
         }
