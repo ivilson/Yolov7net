@@ -12,16 +12,12 @@ namespace Yolov7net.test
         public void TestYolov7()
         {
             
-<<<<<<< .mine
             using var yolo = new Yolov7("./assets/best.onnx",true); //yolov7 模型,不需要 nms 操作
-=======
-            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx"); //yolov7 e2e 模型,不需要 nms 操作
->>>>>>> .theirs
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
-            
-            using var image = Image.FromFile("Assets/4521220630003.jpg");
+            using var image = Image.FromFile("Assets/demo.jpg");
+
             var ret = yolo.Predict(image);
             Assert.NotNull(ret);
             Assert.True(ret.Count == 1);
