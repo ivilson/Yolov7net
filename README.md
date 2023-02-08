@@ -1,6 +1,6 @@
 # Yolov7net
 
-.net 6 yolov7 onnx runtime interface, work for https://github.com/WongKinYiu/yolov7
+.net 6 yolov5,yolov7，yolov8 onnx runtime interface, work for https://github.com/WongKinYiu/yolov7
 
 Usage:
 
