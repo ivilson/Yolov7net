@@ -1,0 +1,317 @@
+﻿using System.Collections.Concurrent;
+using System.Drawing;
+using Yolov7net.Extentions;
+using Yolov7net.Models;
+using Yolov7net;
+using Microsoft.ML.OnnxRuntime.Tensors;
+using Microsoft.ML.OnnxRuntime;
+using NumSharp;
+
+namespace IVilson.AI.Yolov7net
+{
+
+    public class Yolov8 : IDisposable
+    {
+        private readonly InferenceSession _inferenceSession;
+        private YoloModel _model = new YoloModel();
+        private bool _useNumpy = false;
+
+        public Yolov8(string ModelPath, bool useCuda = false)
+        {
+
+            if (useCuda)
+            {
+                SessionOptions opts = SessionOptions.MakeSessionOptionWithCudaProvider();
+                _inferenceSession = new InferenceSession(ModelPath, opts);
+            }
+            else
+            {
+                SessionOptions opts = new();
+                _inferenceSession = new InferenceSession(ModelPath, opts);
+            }
+
+
+            /// Get model info
+            get_input_details();
+            get_output_details();
+        }
+
+        public void SetupLabels(string[] labels)
+        {
+            labels.Select((s, i) => new { i, s }).ToList().ForEach(item =>
+            {
+                _model.Labels.Add(new YoloLabel { Id = item.i, Name = item.s });
+            });
+        }
+
+        public void SetupYoloDefaultLabels()
+        {
+            var s = new string[] { "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush" };
+            SetupLabels(s);
+        }
+
+        public List<YoloPrediction> Predict(Image image, float conf_thres = 0, float iou_thres = 0,bool useNumpy = false)
+        {
+            if (conf_thres > 0f)
+            {
+                _model.Confidence = conf_thres;
+                _model.MulConfidence = conf_thres + 0.05f;
+            }
+            if (iou_thres > 0f)
+            {
+                _model.Overlap = iou_thres;
+            }
+            _useNumpy = useNumpy;
+            return Supress(ParseOutput(Inference(image), image));
+        }
+
+        /// <summary>
+        /// Removes overlaped duplicates (nms).
+        /// </summary>
+        private List<YoloPrediction> Supress(List<YoloPrediction> items)
+        {
+            var result = new List<YoloPrediction>(items);
+
+            foreach (var item in items) // iterate every prediction
+            {
+                foreach (var current in result.ToList()) // make a copy for each iteration
+                {
+                    if (current == item) continue;
+
+                    var (rect1, rect2) = (item.Rectangle, current.Rectangle);
+
+                    RectangleF intersection = RectangleF.Intersect(rect1, rect2);
+
+                    float intArea = intersection.Area(); // intersection area
+                    float unionArea = rect1.Area() + rect2.Area() - intArea; // union area
+                    float overlap = intArea / unionArea; // overlap ratio
+
+                    if (overlap >= _model.Overlap)
+                    {
+                        if (item.Score >= current.Score)
+                        {
+                            result.Remove(current);
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private DenseTensor<float>[] Inference(Image img)
+        {
+            Bitmap resized = null;
+
+            if (img.Width != _model.Width || img.Height != _model.Height)
+            {
+                resized = Utils.ResizeImage(img, _model.Width, _model.Height);
+            }
+            else
+            {
+                resized = new Bitmap(img);
+            }
+
+            var inputs = new List<NamedOnnxValue>
+            {
+                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
+            };
+
+            IDisposableReadOnlyCollection<DisposableNamedOnnxValue> result = _inferenceSession.Run(inputs);
+
+            var output = new List<DenseTensor<float>>();
+
+
+            foreach (var item in _model.Outputs) // add outputs for processing
+            {
+                output.Add(result.First(x => x.Name == item).Value as DenseTensor<float>);
+            };
+
+            return output.ToArray();
+        }
+
+        private List<YoloPrediction> ParseOutput(DenseTensor<float>[] output, Image image)
+        {
+            if(_useNumpy)
+            {
+                return ParseDetectNumpy(output[0], image);
+            }
+            return ParseDetect(output[0], image);
+        }
+
+        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
+        {
+            var result = new ConcurrentBag<YoloPrediction>();
+
+            var (w, h) = (image.Width, image.Height); 
+            var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h);
+            var gain = Math.Min(xGain, yGain); 
+
+            var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2);
+
+            Parallel.For(0, output.Dimensions[0], i =>
+            {
+
+                Parallel.For(0, (int)(output.Length / output.Dimensions[1]), j =>
+                {
+
+                    float xMin = ((output[i, 0, j] - output[i, 2, j] / 2) - xPad) / gain; // unpad bbox tlx to original
+                    float yMin = ((output[i, 1, j] - output[i, 3, j] / 2) - yPad) / gain; // unpad bbox tly to original
+                    float xMax = ((output[i, 0, j] + output[i, 2, j] / 2) - xPad) / gain; // unpad bbox brx to original
+                    float yMax = ((output[i, 1, j] + output[i, 3, j] / 2) - yPad) / gain; // unpad bbox bry to original
+
+                    xMin = Utils.Clamp(xMin, 0, w - 0); // clip bbox tlx to boundaries
+                    yMin = Utils.Clamp(yMin, 0, h - 0); // clip bbox tly to boundaries
+                    xMax = Utils.Clamp(xMax, 0, w - 1); // clip bbox brx to boundaries
+                    yMax = Utils.Clamp(yMax, 0, h - 1); // clip bbox bry to boundaries
+
+                    Parallel.For(0, _model.Dimensions - 4, l =>
+                    {
+                        var pred = output[i, 4 + l, j];
+
+                        if (pred < _model.Confidence) return;
+                        YoloLabel label = _model.Labels[l];
+                        result.Add(new YoloPrediction()
+                        {
+                            Score = pred,
+                            Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
+                        });
+                    });
+                });
+            });
+
+            return result.ToList();
+        }
+
+
+        private List<YoloPrediction> ParseDetectNumpy(DenseTensor<float> output, Image image)
+        {
+            float[] outputArray = output.ToArray<float>();
+            var numpyArray = np.array(outputArray, np.float32);
+            var data = numpyArray.reshape(84, 8400).transpose(new int[] { 1, 0 });
+            return processResult(data, image);
+        }
+
+        private List<YoloPrediction> processResult(NDArray data, Image image)
+        {
+            var result = new ConcurrentBag<YoloPrediction>();
+            var scores = np.max(data[":, 4:"], axis: 1);
+
+            var temp = data[scores > 0.2f];
+            scores = scores[scores > 0.2f];
+            var class_ids = np.argmax(temp[":, 4:"], 1);
+            var boxes = extract_rect(temp, image.Width, image.Height);
+            var indices = nms(boxes, scores);
+            foreach (var x in indices)
+            {
+                YoloLabel label = _model.Labels[class_ids[x]];
+                var prediction = new YoloPrediction(label, scores[x])
+                {
+                    Rectangle = new RectangleF(boxes[x][0], boxes[x][1], boxes[x][2] - boxes[x][0], boxes[x][3] - boxes[x][1])
+                };
+                result.Add(prediction);
+            };
+            return result.ToList();
+        }
+
+
+        private int[] nms(NDArray boxes, NDArray scores, float iou_threshold = .5f)
+        {
+
+            // Sort by score
+            var sortedIndices = np.argsort<float>(scores)["::-1"];
+
+            List<int> keepBoxes = new List<int>();
+            int[] sortedIndicesArray = sortedIndices.Data<int>().ToArray();
+            while (sortedIndicesArray.Length > 0)
+            {
+                // Pick the last box
+                int boxId = sortedIndicesArray[0];
+                keepBoxes.Add(boxId);
+                // Compute IoU of the picked box with the rest
+                NDArray ious = ComputeIOU(boxes[boxId], boxes[sortedIndices["1:"]]);
+
+                // Remove boxes with IoU over the threshold
+                var keepIndices = ious.Data<float>().AsQueryable().ToArray().Select(x => x < iou_threshold).ToArray();
+                sortedIndicesArray = sortedIndicesArray.Skip(keepIndices.Length + 1).ToArray();
+            }
+
+            return keepBoxes.ToArray();
+        }
+
+        private NDArray ComputeIOU(NDArray box, NDArray boxes)
+        {
+            // Compute xmin, ymin, xmax, ymax for both boxes
+            var xmin = np.maximum(box[0], boxes[":", 0]);
+            var ymin = np.maximum(box[1], boxes[":", 1]);
+            var xmax = np.minimum(box[2], boxes[":", 2]);
+            var ymax = np.minimum(box[3], boxes[":", 3]);
+
+            // Compute intersection area
+            var intersection_area = np.maximum(0, xmax - xmin) * np.maximum(0, ymax - ymin);
+
+            // Compute union area
+            var box_area = (box[2] - box[0]) * (box[3] - box[1]);
+            var boxes_area = (boxes[":", 2] - boxes[":", 0]) * (boxes[":", 3] - boxes[":", 1]);
+            var union_area = box_area + boxes_area - intersection_area;
+
+            // Compute IoU
+            var iou = intersection_area / union_area;
+
+            return iou;
+        }
+
+        private NDArray extract_rect(NDArray temp, int width, int height)
+        {
+            var data = rescale_boxes(temp[":, :4"], width, height);
+            var boxes = Xywh2Xyxy(data);
+            return boxes;
+        }
+
+        public NDArray Xywh2Xyxy(NDArray x)
+        {
+            var y = x.Clone();
+            y[":", 0] = x[":", 0] - x[":", 2] / 2;
+            y[":", 1] = x[":", 1] - x[":", 3] / 2;
+            y[":", 2] = x[":", 0] + x[":", 2] / 2;
+            y[":", 3] = x[":", 1] + x[":", 3] / 2;
+            return y;
+        }
+
+        private NDArray rescale_boxes(NDArray boxes, int width, int height)
+        {
+
+            NDArray inputShape = np.array(new float[] { _model.Width, _model.Height, _model.Width, _model.Height });
+            NDArray resizedBoxes = np.divide(boxes, inputShape);
+            resizedBoxes = np.multiply(resizedBoxes, new float[] { width, height, width, height });
+            return resizedBoxes;
+        }
+
+
+
+
+        private void prepare_input(Image img)
+        {
+            Bitmap bmp = Utils.ResizeImage(img, _model.Width, _model.Height);
+
+        }
+
+        private void get_input_details()
+        {
+            _model.Height = _inferenceSession.InputMetadata["images"].Dimensions[2];
+            _model.Width = _inferenceSession.InputMetadata["images"].Dimensions[3];
+        }
+
+        private void get_output_details()
+        {
+            _model.Outputs = _inferenceSession.OutputMetadata.Keys.ToArray();
+            _model.Dimensions = _inferenceSession.OutputMetadata[_model.Outputs[0]].Dimensions[1];
+            _model.UseDetect = !(_model.Outputs.Any(x => x == "score"));
+        }
+
+        public void Dispose()
+        {
+            _inferenceSession.Dispose();
+        }
+    }
+}
