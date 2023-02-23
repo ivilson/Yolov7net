@@ -173,6 +173,7 @@ namespace IVilson.AI.Yolov7net
                         YoloLabel label = _model.Labels[l];
                         result.Add(new YoloPrediction()
                         {
+                            Label = label,
                             Score = pred,
                             Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
                         });
