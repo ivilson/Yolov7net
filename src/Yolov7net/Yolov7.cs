@@ -64,7 +64,7 @@ namespace Yolov7net
 
             Parallel.For(0, output.Dimensions[0], (i) => {
                 var label = _model.Labels[(int)output[i,5]];
-                var prediction = new YoloPrediction(label, output[0,6]);
+                var prediction = new YoloPrediction(label, output[i,6]);
 
                 var xMin = (output[i, 1] - xPad) / gain;
                 var yMin = (output[i, 2] - yPad) / gain;

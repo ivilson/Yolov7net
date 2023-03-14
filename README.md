@@ -1,6 +1,9 @@
 # Yolov7net Now support yolov8 onnx weight file.
 
-.net 6 yolov5,yolov7，yolov8 onnx runtime interface, work for https://github.com/WongKinYiu/yolov7
+.net 6 yolov5,yolov7，yolov8 onnx runtime interface, work for :
+1. yolov7 https://github.com/WongKinYiu/yolov7
+2. yolov8 https://github.com/ultralytics/ultralytics
+3. yolov5 https://github.com/ultralytics/yolov5
 
 Usage:
 
