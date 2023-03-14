@@ -84,6 +84,41 @@ namespace Yolov7net.Extentions
             return tensor;
         }
 
+        //https://github.com/ivilson/Yolov7net/issues/17
+        public static Tensor<float> ExtractPixels2(Bitmap bitmap)
+        {
+            var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            BitmapData bitmapData = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
+
+            var tensor = new DenseTensor<float>(new[] { 1, 3, bitmap.Height, bitmap.Width });
+
+            Span<byte> data;
+            unsafe
+            {
+                data = new Span<byte>((void*)bitmapData.Scan0, bitmapData.Height * bitmapData.Stride);
+            }
+
+            int pixelCount = bitmap.Width * bitmap.Height;
+            var spanR = tensor.Buffer.Span;
+            var spanG = spanR.Slice(pixelCount);
+            var spanB = spanG.Slice(pixelCount);
+
+            int sidx = 0;
+            int didx = 0;
+            for (int i = 0; i < pixelCount; i++)
+            {
+                spanR[didx] = data[sidx + 2] / 255.0F;
+                spanG[didx] = data[sidx + 1] / 255.0F;
+                spanB[didx] = data[sidx] / 255.0F;
+                didx++;
+                sidx += 4;
+            }
+
+            bitmap.UnlockBits(bitmapData);
+
+            return tensor;
+        }
+
         public static float Clamp(float value, float min, float max)
         {
             return (value < min) ? min : (value > max) ? max : value;

@@ -112,7 +112,7 @@ namespace Yolov7net
 
             var inputs = new List<NamedOnnxValue> // add image as onnx input
             {
-                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
+                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
             };
 
             IDisposableReadOnlyCollection<DisposableNamedOnnxValue> result = _inferenceSession.Run(inputs); // run inference

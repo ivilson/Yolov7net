@@ -12,7 +12,7 @@ namespace Yolov7net.test
         public void TestYolov7()
         {
             
-            using var yolo = new Yolov7("./assets/best.onnx",true); //yolov7 模型,不需要 nms 操作
+            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true); //yolov7 模型,不需要 nms 操作
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
@@ -39,12 +39,12 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov8()
         {
-            using var yolo = new Yolov8("./assets/yolov8n.onnx"); //yolov7 模型,不需要 nms 操作
+            using var yolo = new Yolov8("./assets/yolov8n.onnx"); //yolov8 模型,需要 nms 操作
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
             using var image = Image.FromFile("Assets/demo.jpg");
-            var ret = yolo.Predict(image,useNumpy:true);
+            var ret = yolo.Predict(image,useNumpy:false);
             Assert.NotNull(ret);
             Assert.True(ret.Count == 1);
         }
