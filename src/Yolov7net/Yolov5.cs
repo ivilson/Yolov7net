@@ -199,7 +199,7 @@ namespace Yolov7net
         private void get_output_details()
         {
             _model.Outputs = _inferenceSession.OutputMetadata.Keys.ToArray();
-            _model.Dimensions = _inferenceSession.OutputMetadata[_model.Outputs[0]].Dimensions[1];
+            _model.Dimensions = _inferenceSession.OutputMetadata[_model.Outputs[0]].Dimensions[2];
             _model.UseDetect = !(_model.Outputs.Any(x=>x == "score"));
         }
 

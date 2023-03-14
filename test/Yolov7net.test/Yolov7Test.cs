@@ -30,7 +30,7 @@ namespace Yolov7net.test
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
-            using var image = Image.FromFile("Assets/demo.jpg");
+            using var image = Image.FromFile("Assets/cat_224x224.jpg");
             var ret = yolo.Predict(image);
             Assert.NotNull(ret);
             Assert.True(ret.Count == 1);
