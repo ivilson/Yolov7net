@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using IVilson.AI.Yolov7net;
 using System.Drawing;
 using Yolov7net;
 
@@ -12,6 +11,7 @@ public class YoloDetector
     private Yolov5 yolov5 = new Yolov5("./assets/yolov7-tiny_640x640.onnx",true);
     private Yolov8 yolov8 = new Yolov8("./assets/yolov8n.onnx", true);
     private Image image = Image.FromFile("Assets/2dog.jpg");
+    
     public YoloDetector()
     {
 
@@ -19,17 +19,23 @@ public class YoloDetector
         yolov8.SetupYoloDefaultLabels();
         yolov5.SetupYoloDefaultLabels();
     }
+
     [Benchmark]
     public void Yolov7()
     {
         var ret = yolov7.Predict(image);
     }
 
-
     [Benchmark]
     public void Yolov8()
     {
         var ret = yolov8.Predict(image);
+    }
+
+    [Benchmark]
+    public void Yolov8Numpy()
+    {
+        var ret = yolov8.Predict(image, useNumpy: true);
     }
 
     [Benchmark]
@@ -47,4 +53,3 @@ public class Program
         Console.ReadLine();
     }
 }
-
