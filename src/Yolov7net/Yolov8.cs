@@ -61,7 +61,8 @@ namespace Yolov7net
             }
 
             _useNumpy = useNumpy;
-            return Suppress(ParseOutput(Inference(image), image));
+            using var outputs = Inference(image);
+            return Suppress(ParseOutput(outputs, image));
         }
 
         /// <summary>
@@ -98,7 +99,7 @@ namespace Yolov7net
             return result;
         }
 
-        private DenseTensor<float>[] Inference(Image img)
+        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
         {
             Bitmap resized;
 
@@ -108,35 +109,28 @@ namespace Yolov7net
             }
             else
             {
-                resized = new Bitmap(img);
+                resized = img as Bitmap ?? new Bitmap(img);
             }
 
-            var inputs = new List<NamedOnnxValue>
+            var inputs = new[]
             {
                 NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
             };
 
-            var result = _inferenceSession.Run(inputs);
-
-            var output = new List<DenseTensor<float>>();
-
-
-            foreach (var item in _model.Outputs) // add outputs for processing
-            {
-                output.Add(result.First(x => x.Name == item).Value as DenseTensor<float>);
-            };
-
-            return output.ToArray();
+            return _inferenceSession.Run(inputs, _model.Outputs);
         }
 
-        private List<YoloPrediction> ParseOutput(DenseTensor<float>[] output, Image image)
+        private List<YoloPrediction> ParseOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs, Image image)
         {
-            if(_useNumpy)
+            string firstOutput = _model.Outputs[0];
+            var output = (DenseTensor<float>)outputs.First(x => x.Name == firstOutput).Value;
+
+            if (_useNumpy)
             {
-                return ParseDetectNumpy(output[0], image);
+                return ParseDetectNumpy(output, image);
             }
 
-            return ParseDetect(output[0], image);
+            return ParseDetect(output, image);
         }
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)

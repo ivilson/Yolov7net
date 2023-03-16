@@ -61,7 +61,8 @@ namespace Yolov7net
                 _model.Overlap = iou_thres;
             }
 
-            return Suppress(ParseOutput(Inference(image), image));
+            using var outputs = Inference(image);
+            return Suppress(ParseOutput(outputs, image));
         }
 
         /// <summary>
@@ -98,7 +99,7 @@ namespace Yolov7net
             return result;
         }
 
-        private DenseTensor<float>[] Inference(Image img)
+        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
         {
             Bitmap resized;
 
@@ -108,29 +109,27 @@ namespace Yolov7net
             }
             else
             {
-                resized = new Bitmap(img);
+                resized = img as Bitmap ?? new Bitmap(img);
             }
 
-            var inputs = new List<NamedOnnxValue> // add image as onnx input
+            var inputs = new[] // add image as onnx input
             {
                 NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
             };
 
-            var result = _inferenceSession.Run(inputs); // run inference
-
-            var output = new List<DenseTensor<float>>(_model.Outputs.Length);
-
-            foreach (var item in _model.Outputs) // add outputs for processing
-            {
-                output.Add(result.First(x => x.Name == item).Value as DenseTensor<float>);
-            }
-
-            return output.ToArray();
+            return _inferenceSession.Run(inputs, _model.Outputs); // run inference
         }
 
-        private List<YoloPrediction> ParseOutput(DenseTensor<float>[] output, Image image)
+        private List<YoloPrediction> ParseOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs, Image image)
         {
-            return _model.UseDetect ? ParseDetect(output[0], image) : ParseSigmoid(output, image);
+            if (_model.UseDetect)
+            {
+                string firstOutput = _model.Outputs[0];
+                var output = (DenseTensor<float>)outputs.First(x => x.Name == firstOutput).Value;
+                return ParseDetect(output, image);
+            }
+
+            return ParseSigmoid(outputs, image);
         }
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
@@ -180,7 +179,7 @@ namespace Yolov7net
             return result.ToList();
         }
 
-        private List<YoloPrediction> ParseSigmoid(DenseTensor<float>[] output, Image image)
+        private List<YoloPrediction> ParseSigmoid(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> output, Image image)
         {
             return new List<YoloPrediction>();
         }

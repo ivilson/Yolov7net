@@ -1,17 +1,37 @@
 using System.Diagnostics;
 using System.Drawing;
+using Yolov7net.Extentions;
 
 
 namespace Yolov7net.test
 {
     public class Yolov7Test
     {
-        private readonly (string imageName, string label)[] _testImages = new (string imageName, string label)[]
+        private readonly (Image image, string label)[] _testImages;
+
+        public Yolov7Test()
         {
-            ("demo.jpg", "dog"),
-            ("cat_224x224.jpg", "cat"),
-        };
-        
+            var testFiles = new (string fileName, string label)[]
+            {
+                ("demo.jpg", "dog"),
+                ("cat_224x224.jpg", "cat"),
+            };
+
+            var array = new (Image image, string label)[testFiles.Length * 2];
+            int i = 0;
+            foreach (var tuple in testFiles)
+            {
+                var image = Image.FromFile("Assets/" + tuple.fileName);
+                array[i++] = (image, tuple.label);
+
+                // resized image should give the same result
+                image = Utils.ResizeImage(image, 640, 640);
+                array[i++] = (image, tuple.label);
+            }
+
+            _testImages = array;
+        }
+
         [Fact]
         public void TestYolov7()
         {
@@ -23,8 +43,7 @@ namespace Yolov7net.test
 
             foreach (var tuple in _testImages)
             {
-                using var image = Image.FromFile("Assets/" + tuple.imageName);
-                var ret = yolo.Predict(image);
+                var ret = yolo.Predict(tuple.image);
                 CheckResult(ret, tuple.label);
             }
         }
@@ -40,8 +59,7 @@ namespace Yolov7net.test
 
             foreach (var tuple in _testImages)
             {
-                using var image = Image.FromFile("Assets/" + tuple.imageName);
-                var ret = yolo.Predict(image);
+                var ret = yolo.Predict(tuple.image);
                 CheckResult(ret, tuple.label);
             }
         }
@@ -57,8 +75,7 @@ namespace Yolov7net.test
 
             foreach (var tuple in _testImages)
             {
-                using var image = Image.FromFile("Assets/" + tuple.imageName);
-                var ret = yolo.Predict(image, useNumpy: false);
+                var ret = yolo.Predict(tuple.image, useNumpy: false);
                 CheckResult(ret, tuple.label);
             }
         }
@@ -74,8 +91,7 @@ namespace Yolov7net.test
 
             foreach (var tuple in _testImages)
             {
-                using var image = Image.FromFile("Assets/" + tuple.imageName);
-                var ret = yolo.Predict(image, useNumpy: true);
+                var ret = yolo.Predict(tuple.image, useNumpy: true);
                 CheckResult(ret, tuple.label);
             }
         }
