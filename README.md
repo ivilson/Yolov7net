@@ -1,4 +1,7 @@
 # Performance 
+
+work on i13900k + 64Gb Ram + RTX4090
+
 ![](https://github.com/iwaitu/Yolov7net/raw/master/performance.png)
 
 
