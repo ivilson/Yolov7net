@@ -1,3 +1,8 @@
+# Performance 
+![](https://github.com/iwaitu/Yolov7net/raw/master/performance.png)
+
+
+
 # Yolov7net Now support yolov8 onnx weight file.
 
 .net 6 yolov5, yolov7, yolov8 onnx runtime interface, work for:
