@@ -90,7 +90,6 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        new YoloDetector().Yolov7Resized();
         var summary = BenchmarkRunner.Run(typeof(Program).Assembly);
         Console.ReadLine();
     }
