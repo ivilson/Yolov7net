@@ -11,24 +11,22 @@ namespace Yolov7net
     public  class Yolov7 : IDisposable
     {
         private readonly InferenceSession _inferenceSession;
-        private YoloModel _model = new YoloModel();
+        private readonly YoloModel _model = new YoloModel();
 
-        public Yolov7(string ModelPath, bool useCuda = false)
+        public Yolov7(string modelPath, bool useCuda = false)
         {
-
             if (useCuda)
             {
                 SessionOptions opts = SessionOptions.MakeSessionOptionWithCudaProvider();
-                _inferenceSession = new InferenceSession(ModelPath, opts);
+                _inferenceSession = new InferenceSession(modelPath, opts);
             }
             else
             {
                 SessionOptions opts = new();
-                _inferenceSession = new InferenceSession(ModelPath, opts);
+                _inferenceSession = new InferenceSession(modelPath, opts);
             }
-
-
-            /// Get model info
+            
+            // Get model info
             get_input_details();
             get_output_details();
         }
@@ -62,14 +60,16 @@ namespace Yolov7net
 
             var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2); // left, right pads
 
-            Parallel.For(0, output.Dimensions[0], (i) => {
-                var label = _model.Labels[(int)output[i,5]];
-                var prediction = new YoloPrediction(label, output[i,6]);
+            Parallel.For(0, output.Dimensions[0], i =>
+            {
+                var span = output.Buffer.Span.Slice(i * output.Strides[0]);
+                var label = _model.Labels[(int)span[5]];
+                var prediction = new YoloPrediction(label, span[6]);
 
-                var xMin = (output[i, 1] - xPad) / gain;
-                var yMin = (output[i, 2] - yPad) / gain;
-                var xMax = (output[i, 3] - xPad) / gain;
-                var yMax = (output[i, 4] - yPad) / gain;
+                var xMin = (span[1] - xPad) / gain;
+                var yMin = (span[2] - yPad) / gain;
+                var xMax = (span[3] - xPad) / gain;
+                var yMax = (span[4] - yPad) / gain;
 
                 //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
                 //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
@@ -81,15 +81,12 @@ namespace Yolov7net
                 result.Add(prediction);
             });
 
-           
-            
-
             return result.ToList();
         }
 
         private DenseTensor<float>[] Inference(Image img)
         {
-            Bitmap resized = null;
+            Bitmap resized;
 
             if (img.Width != _model.Width || img.Height != _model.Height)
             {
@@ -105,7 +102,7 @@ namespace Yolov7net
                 NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
             };
 
-            IDisposableReadOnlyCollection<DisposableNamedOnnxValue> result = _inferenceSession.Run(inputs); // run inference
+            var result = _inferenceSession.Run(inputs); // run inference
 
             var output = new List<DenseTensor<float>>();
 

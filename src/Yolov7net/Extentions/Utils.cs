@@ -2,14 +2,11 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using Yolov7net.Extentions;
 
 namespace Yolov7net.Extentions
 {
     public static class Utils
     {
-       
-
         /// <summary>
         /// xywh to xyxy
         /// </summary>
@@ -87,18 +84,43 @@ namespace Yolov7net.Extentions
         //https://github.com/ivilson/Yolov7net/issues/17
         public static Tensor<float> ExtractPixels2(Bitmap bitmap)
         {
+            int pixelCount = bitmap.Width * bitmap.Height;
             var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-            BitmapData bitmapData = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
-
             var tensor = new DenseTensor<float>(new[] { 1, 3, bitmap.Height, bitmap.Width });
-
             Span<byte> data;
-            unsafe
+
+            BitmapData bitmapData;
+            if (bitmap.PixelFormat == PixelFormat.Format24bppRgb && bitmap.Width % 4 == 0)
             {
-                data = new Span<byte>((void*)bitmapData.Scan0, bitmapData.Height * bitmapData.Stride);
+                bitmapData = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+
+                unsafe
+                {
+                    data = new Span<byte>((void*)bitmapData.Scan0, bitmapData.Height * bitmapData.Stride);
+                }
+
+                ExtractPixelsRgb(tensor, data, pixelCount);
+            }
+            else
+            {
+                // force convert to 32 bit PArgb
+                bitmapData = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
+
+                unsafe
+                {
+                    data = new Span<byte>((void*)bitmapData.Scan0, bitmapData.Height * bitmapData.Stride);
+                }
+
+                ExtractPixelsArgb(tensor, data, pixelCount);
             }
 
-            int pixelCount = bitmap.Width * bitmap.Height;
+            bitmap.UnlockBits(bitmapData);
+
+            return tensor;
+        }
+
+        public static void ExtractPixelsArgb(DenseTensor<float> tensor, Span<byte> data, int pixelCount)
+        {
             var spanR = tensor.Buffer.Span;
             var spanG = spanR.Slice(pixelCount);
             var spanB = spanG.Slice(pixelCount);
@@ -113,15 +135,29 @@ namespace Yolov7net.Extentions
                 didx++;
                 sidx += 4;
             }
+        }
 
-            bitmap.UnlockBits(bitmapData);
+        public static void ExtractPixelsRgb(DenseTensor<float> tensor, Span<byte> data, int pixelCount)
+        {
+            var spanR = tensor.Buffer.Span;
+            var spanG = spanR.Slice(pixelCount);
+            var spanB = spanG.Slice(pixelCount);
 
-            return tensor;
+            int sidx = 0;
+            int didx = 0;
+            for (int i = 0; i < pixelCount; i++)
+            {
+                spanR[didx] = data[sidx + 2] / 255.0F;
+                spanG[didx] = data[sidx + 1] / 255.0F;
+                spanB[didx] = data[sidx] / 255.0F;
+                didx++;
+                sidx += 3;
+            }
         }
 
         public static float Clamp(float value, float min, float max)
         {
-            return (value < min) ? min : (value > max) ? max : value;
+            return value < min ? min : value > max ? max : value;
         }
     }
 }
