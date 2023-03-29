@@ -88,6 +88,8 @@ foreach (var prediction in predictions) // iterate predictions to draw results
 ![](https://github.com/iwaitu/Yolov7net/raw/master/result.jpg)
 # References & Acknowledgements
 
+https://github.com/ultralytics/ultralytics
+
 https://github.com/WongKinYiu/yolov7
 
 https://github.com/ultralytics/yolov5
