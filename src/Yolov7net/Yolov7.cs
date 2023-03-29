@@ -47,7 +47,10 @@ namespace Yolov7net
 
         public List<YoloPrediction> Predict(Image image)
         {
-            return ParseDetect(Inference(image)[0], image);
+            using var outputs = Inference(image);
+            string firstOutput = _model.Outputs[0];
+            var output = (DenseTensor<float>)outputs.First(x => x.Name == firstOutput).Value;
+            return ParseDetect(output, image);
         }
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
@@ -84,7 +87,7 @@ namespace Yolov7net
             return result.ToList();
         }
 
-        private DenseTensor<float>[] Inference(Image img)
+        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
         {
             Bitmap resized;
 
@@ -94,24 +97,15 @@ namespace Yolov7net
             }
             else
             {
-                resized = new Bitmap(img);
+                resized = img as Bitmap ?? new Bitmap(img);
             }
 
-            var inputs = new List<NamedOnnxValue> // add image as onnx input
+            var inputs = new[] // add image as onnx input
             {
                 NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
             };
 
-            var result = _inferenceSession.Run(inputs); // run inference
-
-            var output = new List<DenseTensor<float>>();
-
-            foreach (var item in _model.Outputs) // add outputs for processing
-            {
-                output.Add(result.First(x => x.Name == item).Value as DenseTensor<float>);
-            };
-
-            return output.ToArray();
+            return _inferenceSession.Run(inputs, _model.Outputs); // run inference
         }
 
         private void get_input_details()
