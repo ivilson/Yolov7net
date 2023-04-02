@@ -21,6 +21,8 @@ install-package IVilson.AI.Yolov7net
 
 新版本的 yolov8n onnx 输出参数 (1,84,8400) ，调整了输出结果的 ndarray 的结构
 
+如果有问题请前往 issus 进行提问，我会尽量解答
+
 ```csharp
 // init Yolov8 with onnx (include nms results)file path
 using var yolo = new Yolov8("./assets/yolov7-tiny_640x640.onnx", true);
