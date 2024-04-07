@@ -55,37 +55,39 @@ namespace Yolov7net
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
         {
-            var result = new ConcurrentBag<YoloPrediction>();
+            var predictions = new List<YoloPrediction>();
 
-            var (w, h) = (image.Width, image.Height); // image w and h
-            var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h); // x, y gains
-            var gain = Math.Min(xGain, yGain); // gain = resized / original
+            var (w, h) = (image.Width, image.Height);
+            var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h);
+            var gain = Math.Min(xGain, yGain);
+            var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2);
 
-            var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2); // left, right pads
-
-            Parallel.For(0, output.Dimensions[0], i =>
+            for (int i = 0; i < output.Dimensions[0]; i++)
             {
                 var span = output.Buffer.Span.Slice(i * output.Strides[0]);
                 var label = _model.Labels[(int)span[5]];
-                var prediction = new YoloPrediction(label, span[6]);
+                var score = span[6];
+
+                if (score < _model.Confidence) continue;  // Skip detections below confidence threshold
 
                 var xMin = (span[1] - xPad) / gain;
                 var yMin = (span[2] - yPad) / gain;
                 var xMax = (span[3] - xPad) / gain;
                 var yMax = (span[4] - yPad) / gain;
 
-                //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
-                //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
-                //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
-                //box -= tmp;
-                //box /= gain;
+                var prediction = new YoloPrediction
+                {
+                    Label = label,
+                    Score = score,
+                    Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
+                };
 
-                prediction.Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin);
-                result.Add(prediction);
-            });
+                predictions.Add(prediction);
+            }
 
-            return result.ToList();
+            return predictions;
         }
+
 
         private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
         {

@@ -134,50 +134,46 @@ namespace Yolov7net
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
         {
-            var result = new ConcurrentBag<YoloPrediction>();
+            var predictions = new List<YoloPrediction>();
 
-            var (w, h) = (image.Width, image.Height); // image w and h
-            var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h); // x, y gains
-            var gain = Math.Min(xGain, yGain); // gain = resized / original
-
-            var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2); // left, right pads
+            var (w, h) = (image.Width, image.Height);
+            var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h);
+            var gain = Math.Min(xGain, yGain);
+            var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2);
 
             Parallel.For(0, (int)output.Length / _model.Dimensions, i =>
             {
+                var localPredictions = new List<YoloPrediction>();
                 var span = output.Buffer.Span.Slice(i * _model.Dimensions);
-                if (span[4] <= _model.Confidence) return; // skip low obj_conf results
+                if (span[4] <= _model.Confidence) return;
 
-                for (int j = 5; j < _model.Dimensions; j++)
-                {
-                    span[j] *= span[4]; // mul_conf = obj_conf * cls_conf
-                }
-
-                float xMin = (span[0] - span[2] / 2 - xPad) / gain; // unpad bbox tlx to original
-                float yMin = (span[1] - span[3] / 2 - yPad) / gain; // unpad bbox tly to original
-                float xMax = (span[0] + span[2] / 2 - xPad) / gain; // unpad bbox brx to original
-                float yMax = (span[1] + span[3] / 2 - yPad) / gain; // unpad bbox bry to original
-
-                xMin = Utils.Clamp(xMin, 0, w - 0); // clip bbox tlx to boundaries
-                yMin = Utils.Clamp(yMin, 0, h - 0); // clip bbox tly to boundaries
-                xMax = Utils.Clamp(xMax, 0, w - 1); // clip bbox brx to boundaries
-                yMax = Utils.Clamp(yMax, 0, h - 1); // clip bbox bry to boundaries
+                float xMin = Math.Max((span[0] - span[2] / 2 - xPad) / gain, 0);
+                float yMin = Math.Max((span[1] - span[3] / 2 - yPad) / gain, 0);
+                float xMax = Math.Min((span[0] + span[2] / 2 - xPad) / gain, w - 1);
+                float yMax = Math.Min((span[1] + span[3] / 2 - yPad) / gain, h - 1);
 
                 for (int k = 5; k < _model.Dimensions; k++)
                 {
-                    if (span[k] <= _model.MulConfidence) continue; // skip low mul_conf results
+                    span[k] *= span[4]; // mul_conf = obj_conf * cls_conf
+                    if (span[k] <= _model.MulConfidence) continue;
 
                     var label = _model.Labels[k - 5];
-                    var prediction = new YoloPrediction(label, span[k])
+                    localPredictions.Add(new YoloPrediction(label, span[k])
                     {
                         Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
-                    };
+                    });
+                }
 
-                    result.Add(prediction);
+                // 合并到全局结果
+                lock (predictions)
+                {
+                    predictions.AddRange(localPredictions);
                 }
             });
 
-            return result.ToList();
+            return predictions;
         }
+
 
         private List<YoloPrediction> ParseSigmoid(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> output, Image image)
         {

@@ -70,34 +70,41 @@ namespace Yolov7net
         /// </summary>
         private List<YoloPrediction> Suppress(List<YoloPrediction> items)
         {
-            var result = new List<YoloPrediction>(items);
+            var areas = items.ToDictionary(item => item, item => item.Rectangle.Area());
+            var toRemove = new ConcurrentBag<YoloPrediction>();
 
-            foreach (var item in items) // iterate every prediction
+            Parallel.ForEach(items, item =>
             {
-                foreach (var current in result.ToList()) // make a copy for each iteration
+                foreach (var current in items)
                 {
-                    if (current == item) continue;
+                    if (current == item || toRemove.Contains(current)) continue;
 
-                    var (rect1, rect2) = (item.Rectangle, current.Rectangle);
+                    var intersection = RectangleF.Intersect(item.Rectangle, current.Rectangle);
+                    if (intersection.IsEmpty) continue;
 
-                    var intersection = RectangleF.Intersect(rect1, rect2);
-
-                    float intArea = intersection.Area(); // intersection area
-                    float unionArea = rect1.Area() + rect2.Area() - intArea; // union area
-                    float overlap = intArea / unionArea; // overlap ratio
+                    float intArea = intersection.Area();
+                    float unionArea = areas[item] + areas[current] - intArea;
+                    float overlap = intArea / unionArea;
 
                     if (overlap >= _model.Overlap)
                     {
                         if (item.Score >= current.Score)
                         {
-                            result.Remove(current);
+                            toRemove.Add(current);
+                        }
+                        else
+                        {
+                            toRemove.Add(item);
+                            break;
                         }
                     }
                 }
-            }
+            });
 
+            var result = items.Except(toRemove).ToList();
             return result;
         }
+
 
         private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
         {
@@ -135,48 +142,56 @@ namespace Yolov7net
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
         {
-            var result = new ConcurrentBag<YoloPrediction>();
-
-            var (w, h) = (image.Width, image.Height); 
+            var predictions = new List<YoloPrediction>(); // 使用List收集所有预测结果
+            var (w, h) = (image.Width, image.Height);
             var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h);
-            var gain = Math.Min(xGain, yGain); 
-
+            var gain = Math.Min(xGain, yGain);
             var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2);
+            var dim = output.Strides[1];
 
             Parallel.For(0, output.Dimensions[0], i =>
             {
-                Parallel.For(0, (int)(output.Length / output.Dimensions[1]), j =>
-                {
-                    int dim = output.Strides[1];
-                    var span = output.Buffer.Span.Slice(i * output.Strides[0]);
+                var localPredictions = new List<YoloPrediction>(); // 局部集合存储当前线程的预测
+                var span = output.Buffer.Span.Slice(i * output.Strides[0]);
 
+                for (int j = 0; j < (int)(output.Length / output.Dimensions[1]); j++)
+                {
                     float a = span[j];
                     float b = span[dim + j];
                     float c = span[2 * dim + j];
                     float d = span[3 * dim + j];
-                    float xMin = ((a - c / 2) - xPad) / gain; // unpad bbox tlx to original
-                    float yMin = ((b - d / 2) - yPad) / gain; // unpad bbox tly to original
-                    float xMax = ((a + c / 2) - xPad) / gain; // unpad bbox brx to original
-                    float yMax = ((b + d / 2) - yPad) / gain; // unpad bbox bry to original
+
+                    // 预计算并重用这些值
+                    float xMin = ((a - c / 2) - xPad) / gain;
+                    float yMin = ((b - d / 2) - yPad) / gain;
+                    float xMax = ((a + c / 2) - xPad) / gain;
+                    float yMax = ((b + d / 2) - yPad) / gain;
 
                     for (int l = 0; l < _model.Dimensions - 4; l++)
                     {
                         var pred = span[(4 + l) * dim + j];
-
                         if (pred < _model.Confidence) continue;
+
                         var label = _model.Labels[l];
-                        result.Add(new YoloPrediction
+                        localPredictions.Add(new YoloPrediction
                         {
                             Label = label,
                             Score = pred,
                             Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
                         });
                     }
-                });
+                }
+                // 合并当前线程的预测结果到全局列表
+                lock (predictions)
+                {
+                    predictions.AddRange(localPredictions);
+                }
             });
 
-            return result.ToList();
+            return predictions;
         }
+
+
 
 
         private List<YoloPrediction> ParseDetectNumpy(DenseTensor<float> output, Image image)
