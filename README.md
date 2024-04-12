@@ -9,9 +9,11 @@ work on i13900k + 64Gb Ram + RTX4090
 # Yolov7net Now support yolov8 onnx weight file.
 
 .net 6 yolov5, yolov7, yolov8 onnx runtime interface, work for:
-1. yolov7 https://github.com/WongKinYiu/yolov7
+1. yolov9 https://github.com/WongKinYiu/yolov9
 2. yolov8 https://github.com/ultralytics/ultralytics
-3. yolov5 https://github.com/ultralytics/yolov5
+3. yolov7 https://github.com/WongKinYiu/yolov7
+4. yolov5 https://github.com/ultralytics/yolov5
+
 
 Usage:
 
@@ -19,9 +21,11 @@ install-package IVilson.AI.Yolov7net
 
 ![](https://github.com/ivilson/Yolov7net/raw/master/test/Yolov7net.test/Assets/demo.jpg)
 
-新版本的 yolov8n onnx 输出参数 (1,84,8400) ，调整了输出结果的 ndarray 的结构
+支持的yolo 版本包括 yolov5,yolov7,yolov8,yolov9 
 
 如果有问题请前往 issus 进行提问，我会尽量解答
+
+yolov9 和 yolov8 保持兼容，所以当你使用 yolov9 的 onnx 模型时，可以继续使用 new Yolov8("xxx.onnx") 的方式加载
 
 ```csharp
 // init Yolov8 with onnx (include nms results)file path
