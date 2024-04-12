@@ -5,7 +5,7 @@ As part of our ongoing efforts to improve our project structure and workflow, we
 
 The master branch has been renamed to net6.0. This change reflects our progression and the versioning aligned with the new features and improvements.
 The net8.0 branch has been renamed to master. This is now the main branch where the latest stable releases and active developments will happen.
-What This Means for Contributors
+
 
 # Performance 
 
