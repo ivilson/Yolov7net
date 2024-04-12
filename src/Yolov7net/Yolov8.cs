@@ -192,7 +192,7 @@ namespace Yolov7net
         }
 
 
-
+        #region numpy only
 
         private List<YoloPrediction> ParseDetectNumpy(DenseTensor<float> output, Image image)
         {
@@ -223,7 +223,6 @@ namespace Yolov7net
             };
             return result.ToList();
         }
-
 
         private int[] nms(NDArray boxes, NDArray scores, float iou_threshold = .5f)
         {
@@ -296,6 +295,8 @@ namespace Yolov7net
             resizedBoxes = np.multiply(resizedBoxes, new float[] { width, height, width, height });
             return resizedBoxes;
         }
+
+        #endregion
 
         private void prepare_input(Image img)
         {
