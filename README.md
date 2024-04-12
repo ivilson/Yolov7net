@@ -6,7 +6,7 @@ work on i13900k + 64Gb Ram + RTX4090
 
 
 
-# Yolov7net Now support yolov8 onnx weight file.
+# Yolov7net Now support yolov5,yolov7,yolov8,yolov9.
 
 .net 6 yolov5, yolov7, yolov8 onnx runtime interface, work for:
 1. yolov9 https://github.com/WongKinYiu/yolov9
