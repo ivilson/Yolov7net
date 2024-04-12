@@ -30,7 +30,7 @@ install-package IVilson.AI.Yolov7net
 
 ![](https://github.com/ivilson/Yolov7net/raw/master/test/Yolov7net.test/Assets/demo.jpg)
 
-yolov9 和 yolov8 的 onnx 输出参数 (1,84,8400) ，调整了输出结果的 ndarray 的结构
+yolov9 和 yolov8 的 onnx 输出参数相同，都是 (1,84,8400)
 
 如果有问题请前往 issus 进行提问，我会尽量解答
 
