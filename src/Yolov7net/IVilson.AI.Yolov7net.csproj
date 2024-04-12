@@ -6,8 +6,9 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Authors>ivilson.com</Authors>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Description>yolov7 onnx interface for .net 6</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
