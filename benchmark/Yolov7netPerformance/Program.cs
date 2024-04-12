@@ -11,6 +11,7 @@ public class YoloDetector
     private readonly Yolov7 _yolov7 = new Yolov7("./assets/yolov7-tiny.onnx",true);
     private readonly Yolov5 _yolov5 = new Yolov5("./assets/yolov7-tiny_640x640.onnx",true);
     private readonly Yolov8 _yolov8 = new Yolov8("./assets/yolov8n.onnx", true);
+    private readonly Yolov8 _yolov9 = new Yolov8("./assets/yolov9-c.onnx", true);
     private readonly Image _image = Image.FromFile("Assets/2dog.jpg");
     private readonly Image _image640;
     
@@ -19,6 +20,7 @@ public class YoloDetector
         _yolov7.SetupYoloDefaultLabels();
         _yolov8.SetupYoloDefaultLabels();
         _yolov5.SetupYoloDefaultLabels();
+        _yolov9.SetupYoloDefaultLabels();
         _image640 = Utils.ResizeImage(_image, 640, 640);
     }
 
@@ -69,6 +71,24 @@ public class YoloDetector
 
     [Benchmark]
     public void Yolov8Resized()
+    {
+        for (int i = 0; i < RunCount; i++)
+        {
+            var ret = _yolov8.Predict(_image640);
+        }
+    }
+
+    [Benchmark]
+    public void Yolov9()
+    {
+        for (int i = 0; i < RunCount; i++)
+        {
+            var ret = _yolov8.Predict(_image);
+        }
+    }
+
+    [Benchmark]
+    public void Yolov9Resized()
     {
         for (int i = 0; i < RunCount; i++)
         {

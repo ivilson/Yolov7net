@@ -96,6 +96,22 @@ namespace Yolov7net.test
             }
         }
 
+        [Fact]
+        public void TestYolov9()
+        {
+            using var yolo = new Yolov8("./assets/yolov9-c.onnx"); //yolov9 模型,需要 nms 操作
+
+            // setup labels of onnx model 
+            yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
+            Assert.NotNull(yolo);
+
+            foreach (var tuple in _testImages)
+            {
+                var ret = yolo.Predict(tuple.image, useNumpy: false);
+                CheckResult(ret, tuple.label);
+            }
+        }
+
         private void CheckResult(List<YoloPrediction> predictions, string label)
         {
             Assert.NotNull(predictions);
@@ -104,21 +120,6 @@ namespace Yolov7net.test
             System.Diagnostics.Debug.WriteLine(predictions[0].Rectangle);
         }
 
-        [Fact]
-        public void TestPerformance()
-        {
-            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx");
-            yolo.SetupYoloDefaultLabels();
-            
-            var sw = Stopwatch.StartNew();
-            for(int i = 0; i < 10; i++)
-            {
-                using var image = Image.FromFile("Assets/demo.jpg");
-                var ret = yolo.Predict(image);
-            }
         
-            sw.Stop();
-            Debug.WriteLine(sw.ElapsedMilliseconds);
-        }
     }
 }
