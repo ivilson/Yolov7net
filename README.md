@@ -1,3 +1,5 @@
+2024.4.7 this project upgrade to net8.0
+
 # Performance 
 
 work on i13900k + 64Gb Ram + RTX4090
