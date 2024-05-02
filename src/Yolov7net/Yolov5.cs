@@ -1,7 +1,6 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using System.Collections.Concurrent;
-using System.Drawing;
+using SkiaSharp;
 using Yolov7net.Extentions;
 using Yolov7net.Models;
 
@@ -48,7 +47,7 @@ namespace Yolov7net
             SetupLabels(s);
         }
 
-        public List<YoloPrediction> Predict(Image image, float conf_thres = 0, float iou_thres = 0)
+        public List<YoloPrediction> Predict(SKBitmap image, float conf_thres = 0, float iou_thres = 0)
         {
             if (conf_thres > 0f)
             {
@@ -80,10 +79,11 @@ namespace Yolov7net
 
                     var (rect1, rect2) = (item.Rectangle, current.Rectangle);
 
-                    var intersection = RectangleF.Intersect(rect1, rect2);
-
-                    float intArea = intersection.Area(); // intersection area
-                    float unionArea = rect1.Area() + rect2.Area() - intArea; // union area
+                    SKRect intersection;
+                    intersection = SKRect.Intersect(item.Rectangle, current.Rectangle);
+                    if (intersection.IsEmpty) continue;
+                    float intArea = Area(intersection); // intersection area
+                    float unionArea = Area(rect1) + Area(rect2) - intArea; // union area
                     float overlap = intArea / unionArea; // overlap ratio
 
                     if (overlap >= _model.Overlap)
@@ -99,9 +99,14 @@ namespace Yolov7net
             return result;
         }
 
-        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
+        private float Area(SKRect rect)
         {
-            Bitmap resized;
+            return rect.Width * rect.Height;
+        }
+
+        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(SKBitmap img)
+        {
+            SKBitmap resized;
 
             if (img.Width != _model.Width || img.Height != _model.Height)
             {
@@ -109,18 +114,18 @@ namespace Yolov7net
             }
             else
             {
-                resized = img as Bitmap ?? new Bitmap(img);
+                resized = img;
             }
 
             var inputs = new[] // add image as onnx input
             {
-                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
+                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
             };
 
             return _inferenceSession.Run(inputs, _model.Outputs); // run inference
         }
 
-        private List<YoloPrediction> ParseOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs, Image image)
+        private List<YoloPrediction> ParseOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs, SKBitmap image)
         {
             if (_model.UseDetect)
             {
@@ -132,7 +137,7 @@ namespace Yolov7net
             return ParseSigmoid(outputs, image);
         }
 
-        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
+        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, SKBitmap image)
         {
             var predictions = new List<YoloPrediction>();
 
@@ -160,7 +165,7 @@ namespace Yolov7net
                     var label = _model.Labels[k - 5];
                     localPredictions.Add(new YoloPrediction(label, span[k])
                     {
-                        Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
+                        Rectangle = new SKRect(xMin, yMin, xMax - xMin, yMax - yMin)
                     });
                 }
 
@@ -175,12 +180,12 @@ namespace Yolov7net
         }
 
 
-        private List<YoloPrediction> ParseSigmoid(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> output, Image image)
+        private List<YoloPrediction> ParseSigmoid(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> output, SKBitmap image)
         {
             return new List<YoloPrediction>();
         }
 
-        private void prepare_input(Image img)
+        private void prepare_input(SKBitmap img)
         {
             var bmp = Utils.ResizeImage(img, _model.Width, _model.Height);
         }

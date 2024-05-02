@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using SkiaSharp;
 using System.Drawing;
 using Yolov7net;
 using Yolov7net.Extentions;
@@ -12,8 +13,8 @@ public class YoloDetector
     private readonly Yolov5 _yolov5 = new Yolov5("./assets/yolov7-tiny_640x640.onnx",true);
     private readonly Yolov8 _yolov8 = new Yolov8("./assets/yolov8n.onnx", true);
     private readonly Yolov8 _yolov9 = new Yolov8("./assets/yolov9-c.onnx", true);
-    private readonly Image _image = Image.FromFile("Assets/2dog.jpg");
-    private readonly Image _image640;
+    private readonly SKBitmap _image = SKBitmap.Decode("Assets/2dog.jpg");
+    private readonly SKBitmap _image640;
     
     public YoloDetector()
     {
@@ -96,14 +97,14 @@ public class YoloDetector
         }
     }
 
-    [Benchmark]
-    public void Yolov8Numpy()
-    {
-        for (int i = 0; i < RunCount; i++)
-        {
-            var ret = _yolov8.Predict(_image, useNumpy: true);
-        }
-    }
+    //[Benchmark]
+    //public void Yolov8Numpy()
+    //{
+    //    for (int i = 0; i < RunCount; i++)
+    //    {
+    //        var ret = _yolov8.Predict(_image, useNumpy: true);
+    //    }
+    //}
 }
 
 public class Program

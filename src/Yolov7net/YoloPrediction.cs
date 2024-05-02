@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+﻿using SkiaSharp;
 
 namespace Yolov7net
 {
@@ -6,7 +6,7 @@ namespace Yolov7net
     {
         public YoloLabel? Label { get; set; }
 
-        public RectangleF Rectangle { get; set; }
+        public SKRect Rectangle { get; set; }
         
         public float Score { get; set; }
 
