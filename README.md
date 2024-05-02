@@ -1,4 +1,13 @@
-### 2024.4.7 this project upgrade to net8.0
+### 2024.5.3 new branch released.
+
+1. Considering cross-platform compatibility, such as supporting mobile development, I have removed numpy support in this new branch to reduce the size of the program package.
+2. Remove System.Drawing and replace it with SkiaSharp.
+
+
+
+------------------------------------------------------------
+### HISTORY
+# 2024.4.7 this project upgrade to net8.0
 
 Repository Update Notice
 As part of our ongoing efforts to improve our project structure and workflow, we have made the following changes to the branches of this repository:
