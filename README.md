@@ -3,7 +3,7 @@
 Yolov10
 ```csharp
 // init Yolov8 with onnx (include nms results)file path
-using var yolo = new Yolov10("./assets/yolov9-c.onnx", true);
+using var yolo = new Yolov10("./assets/yolov10n.onnx", true);
 // setup labels of onnx model 
 yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
 using var image = Image.FromFile("Assets/demo.jpg");
