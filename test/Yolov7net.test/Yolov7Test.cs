@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing;
 using Yolov7net.Extentions;
 
@@ -99,7 +98,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov9()
         {
-            using var yolo = new Yolov8("./assets/yolov9-c.onnx"); //yolov9 模型,需要 nms 操作
+            using var yolo = new Yolov9("./assets/yolov9-c.onnx"); //yolov9 模型,需要 nms 操作
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -108,6 +107,22 @@ namespace Yolov7net.test
             foreach (var tuple in _testImages)
             {
                 var ret = yolo.Predict(tuple.image, useNumpy: false);
+                CheckResult(ret, tuple.label);
+            }
+        }
+
+        [Fact]
+        public void TestYolov10()
+        {
+            using var yolo = new Yolov10("./assets/yolov9-c.onnx"); //yolov9 模型,需要 nms 操作
+
+            // setup labels of onnx model 
+            yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
+            Assert.NotNull(yolo);
+
+            foreach (var tuple in _testImages)
+            {
+                var ret = yolo.Predict(tuple.image);
                 CheckResult(ret, tuple.label);
             }
         }
