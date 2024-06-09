@@ -12,9 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.17.1" />
-    <PackageReference Include="NumSharp" Version="0.30.0" />
-    <PackageReference Include="System.Drawing.Common" Version="8.0.3" />
+    <Compile Remove="Yolov7Image.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.17.3" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
   </ItemGroup>
 
 </Project>

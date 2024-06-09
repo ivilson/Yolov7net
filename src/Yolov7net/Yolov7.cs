@@ -1,7 +1,6 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using System.Collections.Concurrent;
-using System.Drawing;
+using SkiaSharp;
 using Yolov7net.Extentions;
 using Yolov7net.Models;
 
@@ -45,7 +44,7 @@ namespace Yolov7net
             SetupLabels(s);
         }
 
-        public List<YoloPrediction> Predict(Image image)
+        public List<YoloPrediction> Predict(SKBitmap image)
         {
             using var outputs = Inference(image);
             string firstOutput = _model.Outputs[0];
@@ -53,7 +52,7 @@ namespace Yolov7net
             return ParseDetect(output, image);
         }
 
-        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
+        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, SKBitmap image)
         {
             var predictions = new List<YoloPrediction>();
 
@@ -79,7 +78,7 @@ namespace Yolov7net
                 {
                     Label = label,
                     Score = score,
-                    Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
+                    Rectangle = new SKRect(xMin, yMin, xMax - xMin, yMax - yMin)
                 };
 
                 predictions.Add(prediction);
@@ -89,9 +88,9 @@ namespace Yolov7net
         }
 
 
-        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
+        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(SKBitmap img)
         {
-            Bitmap resized;
+            SKBitmap resized;
 
             if (img.Width != _model.Width || img.Height != _model.Height)
             {
@@ -99,12 +98,12 @@ namespace Yolov7net
             }
             else
             {
-                resized = img as Bitmap ?? new Bitmap(img);
+                resized = img;
             }
 
             var inputs = new[] // add image as onnx input
             {
-                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
+                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
             };
 
             return _inferenceSession.Run(inputs, _model.Outputs); // run inference

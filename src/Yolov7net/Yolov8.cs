@@ -1,10 +1,9 @@
 ﻿using System.Collections.Concurrent;
-using System.Drawing;
-using Yolov7net.Extentions;
 using Yolov7net.Models;
+using Yolov7net.Extentions;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using Microsoft.ML.OnnxRuntime;
-using NumSharp;
+using SkiaSharp;
 
 namespace Yolov7net
 {
@@ -47,7 +46,7 @@ namespace Yolov7net
             SetupLabels(s);
         }
 
-        public List<YoloPrediction> Predict(Image image, float conf_thres = 0, float iou_thres = 0,bool useNumpy = false)
+        public List<YoloPrediction> Predict(SKBitmap image, float conf_thres = 0, float iou_thres = 0, bool useNumpy = false)
         {
             if (conf_thres > 0f)
             {
@@ -70,7 +69,7 @@ namespace Yolov7net
         /// </summary>
         private List<YoloPrediction> Suppress(List<YoloPrediction> items)
         {
-            var areas = items.ToDictionary(item => item, item => item.Rectangle.Area());
+            var areas = items.ToDictionary(item => item, item => Area(item.Rectangle));
             var toRemove = new ConcurrentBag<YoloPrediction>();
 
             Parallel.ForEach(items, item =>
@@ -79,10 +78,11 @@ namespace Yolov7net
                 {
                     if (current == item || toRemove.Contains(current)) continue;
 
-                    var intersection = RectangleF.Intersect(item.Rectangle, current.Rectangle);
+                    SKRect intersection;
+                    intersection = SKRect.Intersect(item.Rectangle, current.Rectangle);
                     if (intersection.IsEmpty) continue;
 
-                    float intArea = intersection.Area();
+                    float intArea = Area(intersection);
                     float unionArea = areas[item] + areas[current] - intArea;
                     float overlap = intArea / unionArea;
 
@@ -105,10 +105,42 @@ namespace Yolov7net
             return result;
         }
 
-
-        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(Image img)
+        // Helper method to calculate the area of a rectangle
+        private float Area(SKRect rect)
         {
-            Bitmap resized;
+            return rect.Width * rect.Height;
+        }
+
+
+        // 使用 SkiaSharp 调整图像大小
+        // 使用 SkiaSharp 调整图像大小
+        // 使用 SkiaSharp 调整图像大小
+        private SKBitmap ResizeImage(SKBitmap original, int width, int height)
+        {
+            SKImageInfo resizeInfo = new SKImageInfo(width, height);
+            SKBitmap resized = new SKBitmap(resizeInfo);
+            using (SKCanvas canvas = new SKCanvas(resized))
+            {
+                // 创建 SKPaint 对象来设置绘制的质量
+                SKPaint paint = new SKPaint
+                {
+                    FilterQuality = SKFilterQuality.High  // 设置高质量滤镜
+                };
+
+                // 创建一个目标矩形
+                SKRect destRect = new SKRect(0, 0, width, height);
+
+                // 使用 SKPaint 对象绘制位图
+                canvas.DrawBitmap(original, destRect, paint);
+            }
+            return resized;
+        }
+
+
+        // 使用 SkiaSharp 进行图像预处理
+        private IDisposableReadOnlyCollection<DisposableNamedOnnxValue> Inference(SKBitmap img)
+        {
+            SKBitmap resized;
 
             if (img.Width != _model.Width || img.Height != _model.Height)
             {
@@ -116,31 +148,29 @@ namespace Yolov7net
             }
             else
             {
-                resized = img as Bitmap ?? new Bitmap(img);
+                resized = img;
             }
 
             var inputs = new[]
             {
-                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels2(resized))
+                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
             };
 
             return _inferenceSession.Run(inputs, _model.Outputs);
         }
 
-        private List<YoloPrediction> ParseOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs, Image image)
+
+        
+        private List<YoloPrediction> ParseOutput(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> outputs, SKBitmap image)
         {
             string firstOutput = _model.Outputs[0];
             var output = (DenseTensor<float>)outputs.First(x => x.Name == firstOutput).Value;
 
-            if (_useNumpy)
-            {
-                return ParseDetectNumpy(output, image);
-            }
-
             return ParseDetect(output, image);
         }
+        
 
-        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, Image image)
+        private List<YoloPrediction> ParseDetect(DenseTensor<float> output, SKBitmap image)
         {
             var predictions = new List<YoloPrediction>(); // 使用List收集所有预测结果
             var (w, h) = (image.Width, image.Height);
@@ -177,7 +207,7 @@ namespace Yolov7net
                         {
                             Label = label,
                             Score = pred,
-                            Rectangle = new RectangleF(xMin, yMin, xMax - xMin, yMax - yMin)
+                            Rectangle = new SKRect(xMin, yMin, xMax - xMin, yMax - yMin)
                         });
                     }
                 }
@@ -191,118 +221,6 @@ namespace Yolov7net
             return predictions;
         }
 
-
-        #region numpy only
-
-        private List<YoloPrediction> ParseDetectNumpy(DenseTensor<float> output, Image image)
-        {
-            float[] outputArray = output.ToArray();
-            var numpyArray = np.array(outputArray, np.float32);
-            var data = numpyArray.reshape(84, 8400).transpose(new int[] { 1, 0 });
-            return ProcessResult(data, image);
-        }
-
-        private List<YoloPrediction> ProcessResult(NDArray data, Image image)
-        {
-            var result = new ConcurrentBag<YoloPrediction>();
-            var scores = np.max(data[":, 4:"], axis: 1);
-
-            var temp = data[scores > 0.2f];
-            scores = scores[scores > 0.2f];
-            var class_ids = np.argmax(temp[":, 4:"], 1);
-            var boxes = extract_rect(temp, image.Width, image.Height);
-            var indices = nms(boxes, scores);
-            foreach (var x in indices)
-            {
-                var label = _model.Labels[class_ids[x]];
-                var prediction = new YoloPrediction(label, scores[x])
-                {
-                    Rectangle = new RectangleF(boxes[x][0], boxes[x][1], boxes[x][2] - boxes[x][0], boxes[x][3] - boxes[x][1])
-                };
-                result.Add(prediction);
-            };
-            return result.ToList();
-        }
-
-        private int[] nms(NDArray boxes, NDArray scores, float iou_threshold = .5f)
-        {
-
-            // Sort by score
-            var sortedIndices = np.argsort<float>(scores)["::-1"];
-
-            List<int> keepBoxes = new List<int>();
-            int[] sortedIndicesArray = sortedIndices.Data<int>().ToArray();
-            while (sortedIndicesArray.Length > 0)
-            {
-                // Pick the last box
-                int boxId = sortedIndicesArray[0];
-                keepBoxes.Add(boxId);
-                // Compute IoU of the picked box with the rest
-                NDArray ious = ComputeIOU(boxes[boxId], boxes[sortedIndices["1:"]]);
-
-                // Remove boxes with IoU over the threshold
-                var keepIndices = ious.Data<float>().AsQueryable().ToArray().Select(x => x < iou_threshold).ToArray();
-                sortedIndicesArray = sortedIndicesArray.Skip(keepIndices.Length + 1).ToArray();
-            }
-
-            return keepBoxes.ToArray();
-        }
-
-        private NDArray ComputeIOU(NDArray box, NDArray boxes)
-        {
-            // Compute xmin, ymin, xmax, ymax for both boxes
-            var xmin = np.maximum(box[0], boxes[":", 0]);
-            var ymin = np.maximum(box[1], boxes[":", 1]);
-            var xmax = np.minimum(box[2], boxes[":", 2]);
-            var ymax = np.minimum(box[3], boxes[":", 3]);
-
-            // Compute intersection area
-            var intersection_area = np.maximum(0, xmax - xmin) * np.maximum(0, ymax - ymin);
-
-            // Compute union area
-            var box_area = (box[2] - box[0]) * (box[3] - box[1]);
-            var boxes_area = (boxes[":", 2] - boxes[":", 0]) * (boxes[":", 3] - boxes[":", 1]);
-            var union_area = box_area + boxes_area - intersection_area;
-
-            // Compute IoU
-            var iou = intersection_area / union_area;
-
-            return iou;
-        }
-
-        private NDArray extract_rect(NDArray temp, int width, int height)
-        {
-            var data = rescale_boxes(temp[":, :4"], width, height);
-            var boxes = Xywh2Xyxy(data);
-            return boxes;
-        }
-
-        public NDArray Xywh2Xyxy(NDArray x)
-        {
-            var y = x.Clone();
-            y[":", 0] = x[":", 0] - x[":", 2] / 2;
-            y[":", 1] = x[":", 1] - x[":", 3] / 2;
-            y[":", 2] = x[":", 0] + x[":", 2] / 2;
-            y[":", 3] = x[":", 1] + x[":", 3] / 2;
-            return y;
-        }
-
-        private NDArray rescale_boxes(NDArray boxes, int width, int height)
-        {
-
-            NDArray inputShape = np.array(new float[] { _model.Width, _model.Height, _model.Width, _model.Height });
-            NDArray resizedBoxes = np.divide(boxes, inputShape);
-            resizedBoxes = np.multiply(resizedBoxes, new float[] { width, height, width, height });
-            return resizedBoxes;
-        }
-
-        #endregion
-
-        private void prepare_input(Image img)
-        {
-            Bitmap bmp = Utils.ResizeImage(img, _model.Width, _model.Height);
-
-        }
 
         private void get_input_details()
         {

@@ -1,4 +1,5 @@
 ﻿using Microsoft.ML.OnnxRuntime.Tensors;
+using SkiaSharp;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -24,136 +25,86 @@ namespace Yolov7net.Extentions
             return result;
         }
 
-        public static Bitmap ResizeImage(Image image,int target_width,int target_height)
+        public static SKBitmap ResizeImage(SKBitmap image, int targetWidth, int targetHeight)
         {
-            PixelFormat format = image.PixelFormat;
-
-            var output = new Bitmap(target_width, target_height, format);
-
-            var (w, h) = (image.Width, image.Height); // image width and height
-            var (xRatio, yRatio) = (target_width / (float)w, target_height / (float)h); // x, y ratios
-            var ratio = Math.Min(xRatio, yRatio); // ratio = resized / original
-            var (width, height) = ((int)(w * ratio), (int)(h * ratio)); // roi width and height
-            var (x, y) = ((target_width / 2) - (width / 2), (target_height / 2) - (height / 2)); // roi x and y coordinates
-            var roi = new Rectangle(x, y, width, height); // region of interest
-
-            using (var graphics = Graphics.FromImage(output))
+            var resized = new SKBitmap(targetWidth, targetHeight, image.ColorType, image.AlphaType);
+            using (var canvas = new SKCanvas(resized))
             {
-                graphics.Clear(Color.FromArgb(0, 0, 0, 0)); // clear canvas
-
-                graphics.SmoothingMode = SmoothingMode.None; // no smoothing
-                graphics.InterpolationMode = InterpolationMode.Bilinear; // bilinear interpolation
-                graphics.PixelOffsetMode = PixelOffsetMode.Half; // half pixel offset
-
-                graphics.DrawImage(image, roi); // draw scaled
+                canvas.Clear(SKColors.Transparent);
+                var paint = new SKPaint
+                {
+                    FilterQuality = SKFilterQuality.High,
+                    IsAntialias = true
+                };
+                canvas.DrawBitmap(image, SKRect.Create(0, 0, targetWidth, targetHeight), paint);
             }
-
-            return output;
+            return resized;
         }
 
-        public static Tensor<float> ExtractPixels(Bitmap image)
+        public static Tensor<float> ExtractPixels(SKBitmap bitmap)
         {
-            var bitmap = (Bitmap)image;
+            int width = bitmap.Width;
+            int height = bitmap.Height;
+            var tensor = new DenseTensor<float>(new[] { 1, 3, height, width });
 
-            var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-            BitmapData bitmapData = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, bitmap.PixelFormat);
-            int bytesPerPixel = Image.GetPixelFormatSize(bitmap.PixelFormat) / 8;
-
-            var tensor = new DenseTensor<float>(new[] { 1, 3, bitmap.Height, bitmap.Width });
-
-            unsafe // speed up conversion by direct work with memory
+            using (var pixmap = bitmap.PeekPixels())
             {
-                Parallel.For(0, bitmapData.Height, (y) =>
+                var pixels = pixmap.GetPixelSpan<byte>();
+                for (int y = 0; y < height; y++)
                 {
-                    byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride);
-
-                    Parallel.For(0, bitmapData.Width, (x) =>
+                    for (int x = 0; x < width; x++)
                     {
-                        tensor[0, 0, y, x] = row[x * bytesPerPixel + 2] / 255.0F; // r
-                        tensor[0, 1, y, x] = row[x * bytesPerPixel + 1] / 255.0F; // g
-                        tensor[0, 2, y, x] = row[x * bytesPerPixel + 0] / 255.0F; // b
-                    });
-                });
-
-                bitmap.UnlockBits(bitmapData);
+                        int idx = (y * width + x) * 4; // Assuming 4 bytes per pixel (RGBA)
+                        tensor[0, 0, y, x] = pixels[idx + 2] / 255.0f; // R
+                        tensor[0, 1, y, x] = pixels[idx + 1] / 255.0f; // G
+                        tensor[0, 2, y, x] = pixels[idx] / 255.0f;     // B
+                    }
+                }
             }
-
             return tensor;
         }
 
         //https://github.com/ivilson/Yolov7net/issues/17
-        public static Tensor<float> ExtractPixels2(Bitmap bitmap)
+        public static Tensor<float> ExtractPixels2(SKBitmap bitmap)
         {
-            int pixelCount = bitmap.Width * bitmap.Height;
-            var rectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-            var tensor = new DenseTensor<float>(new[] { 1, 3, bitmap.Height, bitmap.Width });
-            Span<byte> data;
+            int width = bitmap.Width;
+            int height = bitmap.Height;
+            var tensor = new DenseTensor<float>(new[] { 1, 3, height, width });
 
-            BitmapData bitmapData;
-            if (bitmap.PixelFormat == PixelFormat.Format24bppRgb && bitmap.Width % 4 == 0)
+            using (var pixmap = bitmap.PeekPixels())
             {
-                bitmapData = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+                var pixels = pixmap.GetPixelSpan<byte>();
+                int bytesPerPixel = pixmap.BytesPerPixel;
+                int pixelCount = width * height;
 
-                unsafe
+                for (int i = 0; i < pixelCount; i++)
                 {
-                    data = new Span<byte>((void*)bitmapData.Scan0, bitmapData.Height * bitmapData.Stride);
+                    int idx = i * bytesPerPixel;
+                    float r = pixels[idx + 2] / 255.0f;  // Assuming RGBA or BGRA
+                    float g = pixels[idx + 1] / 255.0f;
+                    float b = pixels[idx] / 255.0f;
+
+                    if (pixmap.ColorType == SKColorType.Rgba8888 || pixmap.ColorType == SKColorType.Bgra8888)
+                    {
+                        // Adjust index based on color type
+                        if (pixmap.ColorType == SKColorType.Bgra8888)
+                        {
+                            r = pixels[idx] / 255.0f;
+                            g = pixels[idx + 1] / 255.0f;
+                            b = pixels[idx + 2] / 255.0f;
+                        }
+
+                        tensor[0, 0, i / width, i % width] = r;
+                        tensor[0, 1, i / width, i % width] = g;
+                        tensor[0, 2, i / width, i % width] = b;
+                    }
                 }
-
-                ExtractPixelsRgb(tensor, data, pixelCount);
             }
-            else
-            {
-                // force convert to 32 bit PArgb
-                bitmapData = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
-
-                unsafe
-                {
-                    data = new Span<byte>((void*)bitmapData.Scan0, bitmapData.Height * bitmapData.Stride);
-                }
-
-                ExtractPixelsArgb(tensor, data, pixelCount);
-            }
-
-            bitmap.UnlockBits(bitmapData);
 
             return tensor;
         }
 
-        public static void ExtractPixelsArgb(DenseTensor<float> tensor, Span<byte> data, int pixelCount)
-        {
-            var spanR = tensor.Buffer.Span;
-            var spanG = spanR.Slice(pixelCount);
-            var spanB = spanG.Slice(pixelCount);
 
-            int sidx = 0;
-            int didx = 0;
-            for (int i = 0; i < pixelCount; i++)
-            {
-                spanR[didx] = data[sidx + 2] / 255.0F;
-                spanG[didx] = data[sidx + 1] / 255.0F;
-                spanB[didx] = data[sidx] / 255.0F;
-                didx++;
-                sidx += 4;
-            }
-        }
-
-        public static void ExtractPixelsRgb(DenseTensor<float> tensor, Span<byte> data, int pixelCount)
-        {
-            var spanR = tensor.Buffer.Span;
-            var spanG = spanR.Slice(pixelCount);
-            var spanB = spanG.Slice(pixelCount);
-
-            int sidx = 0;
-            int didx = 0;
-            for (int i = 0; i < pixelCount; i++)
-            {
-                spanR[didx] = data[sidx + 2] / 255.0F;
-                spanG[didx] = data[sidx + 1] / 255.0F;
-                spanB[didx] = data[sidx] / 255.0F;
-                didx++;
-                sidx += 3;
-            }
-        }
 
         public static float Clamp(float value, float min, float max)
         {
