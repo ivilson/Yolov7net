@@ -45,7 +45,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov7()
         {
-            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true); //yolov7 模型,不需要 nms 操作
+            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true); 
             
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -61,7 +61,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov5()
         {
-            using var yolo = new Yolov5("./assets/yolov7-tiny_640x640.onnx"); //yolov5 or yolov7 模型, 需要 nms 操作
+            using var yolo = new Yolov5("./assets/yolov7-tiny_640x640.onnx"); 
             
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -77,7 +77,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov8()
         {
-            using var yolo = new Yolov8("./assets/yolov8n.onnx",useCuda:true); //yolov8 模型,需要 nms 操作
+            using var yolo = new Yolov8("./assets/yolov8n.onnx",useCuda:true); 
             
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -94,7 +94,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov9()
         {
-            using var yolo = new Yolov9("./assets/yolov9-c.onnx"); //yolov9 模型,需要 nms 操作
+            using var yolo = new Yolov9("./assets/yolov9-c.onnx"); 
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -110,7 +110,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov10()
         {
-            using var yolo = new Yolov10("./assets/yolov10n.onnx"); //yolov9 模型,需要 nms 操作
+            using var yolo = new Yolov10("./assets/yolov10n.onnx"); 
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
