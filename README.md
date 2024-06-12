@@ -1,7 +1,12 @@
 ### 2024.6.12
 
 修正了了使用 skiasharp 预测框不准的问题。
-移除system.drawing 的支持，主分支已使用 skiasharp.
+
+移除system.drawing 的支持
+
+主分支已使用 skiasharp.
+
+具体使用方法参考 demo 工程的 Programe.cs
 
 ### 2024.6.9
 1. add yolov10 support.
