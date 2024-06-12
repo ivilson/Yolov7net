@@ -6,8 +6,9 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Authors>ivilson.com</Authors>
-    <Version>1.0.4</Version>
-    <Description>yolov7 onnx interface for .net 6</Description>
+    <Version>1.0.8</Version>
+    <Description>yolov onnx interface for .net 8
+replace system.drawing with skiasharp for cross-platform support.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
