@@ -1,8 +1,5 @@
 ﻿using Microsoft.ML.OnnxRuntime.Tensors;
 using SkiaSharp;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 
 namespace Yolov7net.Extentions
 {
@@ -25,6 +22,53 @@ namespace Yolov7net.Extentions
             return result;
         }
 
+        public static SKBitmap PreprocessSourceImage(SKBitmap sourceImage)
+        {
+            int RequiredWidth  = 640;
+            int RequiredHeight = 640;
+            var (w, h) = (sourceImage.Width, sourceImage.Height); // image width and height
+            var (xRatio, yRatio) = (RequiredWidth / (float)w, RequiredHeight / (float)h); // x, y ratios
+            var ratio = Math.Min(xRatio, yRatio); // ratio = resized / original
+            var (width, height) = ((int)(w * ratio), (int)(h * ratio)); // roi width and height
+            var (x, y) = ((RequiredWidth / 2) - (width / 2), (RequiredHeight / 2) - (height / 2)); // roi x and y coordinates
+
+            var roi = SKRectI.Create(new SKPointI(x, y), new SKSizeI(width, height));
+
+            SKBitmap graph = new SKBitmap(RequiredWidth, RequiredHeight);
+            using SKCanvas canvas = new SKCanvas(graph);
+            canvas.DrawBitmap(sourceImage, roi);
+
+            return graph;
+        }
+
+        /// <summary>
+        /// 优化原有方法
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static Tensor<float> GetTensorForSKImage(SKBitmap image)
+        {
+            var bytes = image.GetPixelSpan();
+            var expectedOutputLength = image.Width * image.Height * 3;
+            float[] channelData = new float[expectedOutputLength];
+
+            var expectedChannelLength = expectedOutputLength / 3;
+            var greenOffset = expectedChannelLength;
+            var blueOffset = expectedChannelLength * 2;
+
+            for (int i = 0, i2 = 0; i < bytes.Length; i += 4, i2++)
+            {
+                var b = Convert.ToSingle(bytes[i]);
+                var g = Convert.ToSingle(bytes[i + 1]);
+                var r = Convert.ToSingle(bytes[i + 2]);
+                channelData[i2] = (r) / 255.0f;
+                channelData[i2 + greenOffset] = (g) / 255.0f;
+                channelData[i2 + blueOffset] = (b) / 255.0f;
+            }
+
+            return new DenseTensor<float>(new Memory<float>(channelData), new[] { 1, 3, image.Height, image.Width });
+        }
+
         public static SKBitmap ResizeImage(SKBitmap image, int targetWidth, int targetHeight)
         {
             var resized = new SKBitmap(targetWidth, targetHeight, image.ColorType, image.AlphaType);
@@ -41,70 +85,7 @@ namespace Yolov7net.Extentions
             return resized;
         }
 
-        public static Tensor<float> ExtractPixels(SKBitmap bitmap)
-        {
-            int width = bitmap.Width;
-            int height = bitmap.Height;
-            var tensor = new DenseTensor<float>(new[] { 1, 3, height, width });
-
-            using (var pixmap = bitmap.PeekPixels())
-            {
-                var pixels = pixmap.GetPixelSpan<byte>();
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        int idx = (y * width + x) * 4; // Assuming 4 bytes per pixel (RGBA)
-                        tensor[0, 0, y, x] = pixels[idx + 2] / 255.0f; // R
-                        tensor[0, 1, y, x] = pixels[idx + 1] / 255.0f; // G
-                        tensor[0, 2, y, x] = pixels[idx] / 255.0f;     // B
-                    }
-                }
-            }
-            return tensor;
-        }
-
-        //https://github.com/ivilson/Yolov7net/issues/17
-        public static Tensor<float> ExtractPixels2(SKBitmap bitmap)
-        {
-            int width = bitmap.Width;
-            int height = bitmap.Height;
-            var tensor = new DenseTensor<float>(new[] { 1, 3, height, width });
-
-            using (var pixmap = bitmap.PeekPixels())
-            {
-                var pixels = pixmap.GetPixelSpan<byte>();
-                int bytesPerPixel = pixmap.BytesPerPixel;
-                int pixelCount = width * height;
-
-                for (int i = 0; i < pixelCount; i++)
-                {
-                    int idx = i * bytesPerPixel;
-                    float r = pixels[idx + 2] / 255.0f;  // Assuming RGBA or BGRA
-                    float g = pixels[idx + 1] / 255.0f;
-                    float b = pixels[idx] / 255.0f;
-
-                    if (pixmap.ColorType == SKColorType.Rgba8888 || pixmap.ColorType == SKColorType.Bgra8888)
-                    {
-                        // Adjust index based on color type
-                        if (pixmap.ColorType == SKColorType.Bgra8888)
-                        {
-                            r = pixels[idx] / 255.0f;
-                            g = pixels[idx + 1] / 255.0f;
-                            b = pixels[idx + 2] / 255.0f;
-                        }
-
-                        tensor[0, 0, i / width, i % width] = r;
-                        tensor[0, 1, i / width, i % width] = g;
-                        tensor[0, 2, i / width, i % width] = b;
-                    }
-                }
-            }
-
-            return tensor;
-        }
-
-
+        
 
         public static float Clamp(float value, float min, float max)
         {

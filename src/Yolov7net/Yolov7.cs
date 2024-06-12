@@ -1,6 +1,8 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SkiaSharp;
+using System.Collections.Concurrent;
+using System.Drawing;
 using Yolov7net.Extentions;
 using Yolov7net.Models;
 
@@ -54,37 +56,36 @@ namespace Yolov7net
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, SKBitmap image)
         {
-            var predictions = new List<YoloPrediction>();
+            //var predictions = new List<YoloPrediction>();
+            var result = new ConcurrentBag<YoloPrediction>();
 
             var (w, h) = (image.Width, image.Height);
             var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h);
             var gain = Math.Min(xGain, yGain);
             var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2);
 
-            for (int i = 0; i < output.Dimensions[0]; i++)
+            Parallel.For(0, output.Dimensions[0], i =>
             {
                 var span = output.Buffer.Span.Slice(i * output.Strides[0]);
                 var label = _model.Labels[(int)span[5]];
-                var score = span[6];
-
-                if (score < _model.Confidence) continue;  // Skip detections below confidence threshold
+                var prediction = new YoloPrediction(label, span[6]);
 
                 var xMin = (span[1] - xPad) / gain;
                 var yMin = (span[2] - yPad) / gain;
                 var xMax = (span[3] - xPad) / gain;
                 var yMax = (span[4] - yPad) / gain;
 
-                var prediction = new YoloPrediction
-                {
-                    Label = label,
-                    Score = score,
-                    Rectangle = new SKRect(xMin, yMin, xMax - xMin, yMax - yMin)
-                };
+                //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
+                //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
+                //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
+                //box -= tmp;
+                //box /= gain;
 
-                predictions.Add(prediction);
-            }
+                prediction.Rectangle = new SKRect(xMin, yMin, xMax, yMax);
+                result.Add(prediction);
+            });
 
-            return predictions;
+            return result.ToList();
         }
 
 
@@ -103,7 +104,7 @@ namespace Yolov7net
 
             var inputs = new[] // add image as onnx input
             {
-                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
+                NamedOnnxValue.CreateFromTensor("images", Utils.GetTensorForSKImage(resized))
             };
 
             return _inferenceSession.Run(inputs, _model.Outputs); // run inference

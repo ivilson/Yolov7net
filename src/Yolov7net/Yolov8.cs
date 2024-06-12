@@ -153,7 +153,7 @@ namespace Yolov7net
 
             var inputs = new[]
             {
-                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
+                NamedOnnxValue.CreateFromTensor("images", Utils.GetTensorForSKImage(resized))
             };
 
             return _inferenceSession.Run(inputs, _model.Outputs);
@@ -207,7 +207,7 @@ namespace Yolov7net
                         {
                             Label = label,
                             Score = pred,
-                            Rectangle = new SKRect(xMin, yMin, xMax - xMin, yMax - yMin)
+                            Rectangle = new SKRect(xMin, yMin, xMax, yMax)
                         });
                     }
                 }

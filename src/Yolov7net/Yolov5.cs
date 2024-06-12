@@ -119,7 +119,7 @@ namespace Yolov7net
 
             var inputs = new[] // add image as onnx input
             {
-                NamedOnnxValue.CreateFromTensor("images", Utils.ExtractPixels(resized))
+                NamedOnnxValue.CreateFromTensor("images", Utils.GetTensorForSKImage(resized))
             };
 
             return _inferenceSession.Run(inputs, _model.Outputs); // run inference
@@ -165,7 +165,7 @@ namespace Yolov7net
                     var label = _model.Labels[k - 5];
                     localPredictions.Add(new YoloPrediction(label, span[k])
                     {
-                        Rectangle = new SKRect(xMin, yMin, xMax - xMin, yMax - yMin)
+                        Rectangle = new SKRect(xMin, yMin, xMax , yMax)
                     });
                 }
 

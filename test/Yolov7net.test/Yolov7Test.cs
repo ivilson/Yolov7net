@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-using System.Drawing;
-=======
 using SkiaSharp;
-using System;
-using System.Diagnostics;
->>>>>>> 5ab4336f34da713b03466ef167679565ea3d0046
 using Yolov7net.Extentions;
 
 
@@ -116,7 +110,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov10()
         {
-            using var yolo = new Yolov10("./assets/yolov9-c.onnx"); //yolov9 模型,需要 nms 操作
+            using var yolo = new Yolov10("./assets/yolov10n.onnx"); //yolov9 模型,需要 nms 操作
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -134,9 +128,7 @@ namespace Yolov7net.test
             Assert.NotNull(predictions);
             Assert.Equal(1, predictions.Count);
             Assert.Equal(label, predictions[0].Label.Name);
-            Debug.WriteLine(predictions[0].Rectangle);
+            //Debug.WriteLine(predictions[0].Rectangle);
         }
-
-        
     }
 }
