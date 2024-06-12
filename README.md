@@ -6,7 +6,10 @@
 
 主分支已使用 skiasharp.
 
-具体使用方法参考 demo 工程的 Programe.cs
+具体使用方法参考 demo 工程的 [Program.cs](https://github.com/ivilson/Yolov7net/blob/master/Yolov7net.Demo/Program.cs)
+
+最新的性能测试
+![](https://github.com/iwaitu/Yolov7net/raw/master/performance.png)
 
 ### 2024.6.9
 1. add yolov10 support.
