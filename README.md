@@ -64,13 +64,7 @@ yolov10 和 yolov7 保持兼容，包含了NMS 操作，感觉性能上比不上
 
 ------------------------------------------------------------
 ### HISTORY
-<<<<<<< HEAD
 # 2024.4.7 this project upgrade to net8.0
-=======
-
-
-2024.4.7 this project upgrade to net8.0
->>>>>>> 5ab4336f34da713b03466ef167679565ea3d0046
 
 Repository Update Notice
 As part of our ongoing efforts to improve our project structure and workflow, we have made the following changes to the branches of this repository:
