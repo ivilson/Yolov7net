@@ -9,7 +9,7 @@ namespace Yolov7net
     /// <summary>
     /// yolov5、yolov6 模型,不包含nms结果
     /// </summary>
-    public class Yolov5 : IDisposable
+    public class Yolov5 : IYoloNet
     {
         private readonly InferenceSession _inferenceSession;
         private readonly YoloModel _model = new YoloModel();

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using SkiaSharp;
+using System.Drawing;
 
 namespace Yolov7net
 {
@@ -10,8 +11,8 @@ namespace Yolov7net
         
         public YoloLabelKind Kind { get; set; }
         
-        public Color Color { get; set; }
+        public SKColor Color { get; set; }
 
-        public YoloLabel() => Color = Color.Yellow;
+        public YoloLabel() => Color = Color.Red;
     }
 }

@@ -85,7 +85,7 @@ namespace Yolov7net.test
 
             foreach (var tuple in _testImages)
             {
-                var ret = yolo.Predict(tuple.image, useNumpy: false);
+                var ret = yolo.Predict(tuple.image);
                 CheckResult(ret, tuple.label);
             }
         }
@@ -102,7 +102,7 @@ namespace Yolov7net.test
 
             foreach (var tuple in _testImages)
             {
-                var ret = yolo.Predict(tuple.image, useNumpy: false);
+                var ret = yolo.Predict(tuple.image);
                 CheckResult(ret, tuple.label);
             }
         }

@@ -7,11 +7,10 @@ using SkiaSharp;
 
 namespace Yolov7net
 {
-    public class Yolov8 : IDisposable
+    public class Yolov8 : IYoloNet
     {
         private readonly InferenceSession _inferenceSession;
         private readonly YoloModel _model = new YoloModel();
-        private bool _useNumpy;
 
         public Yolov8(string modelPath, bool useCuda = false)
         {
@@ -46,7 +45,7 @@ namespace Yolov7net
             SetupLabels(s);
         }
 
-        public List<YoloPrediction> Predict(SKBitmap image, float conf_thres = 0, float iou_thres = 0, bool useNumpy = false)
+        public List<YoloPrediction> Predict(SKBitmap image, float conf_thres = 0, float iou_thres = 0)
         {
             if (conf_thres > 0f)
             {
@@ -59,7 +58,6 @@ namespace Yolov7net
                 _model.Overlap = iou_thres;
             }
 
-            _useNumpy = useNumpy;
             using var outputs = Inference(image);
             return Suppress(ParseOutput(outputs, image));
         }

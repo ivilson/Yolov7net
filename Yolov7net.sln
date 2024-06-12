@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yolov7net.test", "test\Yolo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yolov7netPerformance", "benchmark\Yolov7netPerformance\Yolov7netPerformance.csproj", "{1A94F92A-599D-41F0-B1AB-BE4455A3440E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yolov7net.Demo", "Yolov7net.Demo\Yolov7net.Demo.csproj", "{3B67D708-FBE1-48B1-BDDA-D9FBCE2D479C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{1A94F92A-599D-41F0-B1AB-BE4455A3440E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A94F92A-599D-41F0-B1AB-BE4455A3440E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A94F92A-599D-41F0-B1AB-BE4455A3440E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B67D708-FBE1-48B1-BDDA-D9FBCE2D479C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B67D708-FBE1-48B1-BDDA-D9FBCE2D479C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B67D708-FBE1-48B1-BDDA-D9FBCE2D479C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B67D708-FBE1-48B1-BDDA-D9FBCE2D479C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

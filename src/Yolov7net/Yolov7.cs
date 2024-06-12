@@ -1,15 +1,13 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SkiaSharp;
-using System.Collections.Concurrent;
-using System.Drawing;
 using Yolov7net.Extentions;
 using Yolov7net.Models;
 
 
 namespace Yolov7net
 {
-    public  class Yolov7 : IDisposable
+    public  class Yolov7 : IYoloNet
     {
         private readonly InferenceSession _inferenceSession;
         private readonly YoloModel _model = new YoloModel();
@@ -46,7 +44,7 @@ namespace Yolov7net
             SetupLabels(s);
         }
 
-        public List<YoloPrediction> Predict(SKBitmap image)
+        public List<YoloPrediction> Predict(SKBitmap image, float conf_thres = 0, float iou_thres = 0)
         {
             using var outputs = Inference(image);
             string firstOutput = _model.Outputs[0];
@@ -56,36 +54,37 @@ namespace Yolov7net
 
         private List<YoloPrediction> ParseDetect(DenseTensor<float> output, SKBitmap image)
         {
-            //var predictions = new List<YoloPrediction>();
-            var result = new ConcurrentBag<YoloPrediction>();
+            var predictions = new List<YoloPrediction>();
 
             var (w, h) = (image.Width, image.Height);
             var (xGain, yGain) = (_model.Width / (float)w, _model.Height / (float)h);
             var gain = Math.Min(xGain, yGain);
             var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2);
 
-            Parallel.For(0, output.Dimensions[0], i =>
+            for (int i = 0; i < output.Dimensions[0]; i++)
             {
                 var span = output.Buffer.Span.Slice(i * output.Strides[0]);
                 var label = _model.Labels[(int)span[5]];
-                var prediction = new YoloPrediction(label, span[6]);
+                var score = span[6];
+
+                if (score < _model.Confidence) continue;  // Skip detections below confidence threshold
 
                 var xMin = (span[1] - xPad) / gain;
                 var yMin = (span[2] - yPad) / gain;
                 var xMax = (span[3] - xPad) / gain;
                 var yMax = (span[4] - yPad) / gain;
 
-                //install package TensorFlow.Net,SciSharp.TensorFlow.Redist 安装这两个包可以用numpy 进行计算
-                //var box = np.array(item.GetValue(1), item.GetValue(2), item.GetValue(3), item.GetValue(4));
-                //var tmp =  np.array(xPad, yPad,xPad, yPad) ;
-                //box -= tmp;
-                //box /= gain;
+                var prediction = new YoloPrediction
+                {
+                    Label = label,
+                    Score = score,
+                    Rectangle = new SKRect(xMin, yMin, xMax , yMax)
+                };
 
-                prediction.Rectangle = new SKRect(xMin, yMin, xMax, yMax);
-                result.Add(prediction);
-            });
+                predictions.Add(prediction);
+            }
 
-            return result.ToList();
+            return predictions;
         }
 
 
@@ -127,5 +126,6 @@ namespace Yolov7net
         {
             _inferenceSession.Dispose();
         }
+
     }
 }
