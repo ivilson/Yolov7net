@@ -33,8 +33,7 @@ var paintText = new SKPaint
 
 #region yolov5
 
-using (var yolo = new Yolov5("./assets/yolov5-tiny_640x640.onnx", true)) //yolov9 模型,需要 nms 操作
-{
+using (var yolo = new Yolov5("./assets/yolov5-tiny_640x640.onnx", true)) 
     RunYolo(yolo, "yolov5");
 }
 
@@ -43,7 +42,7 @@ using (var yolo = new Yolov5("./assets/yolov5-tiny_640x640.onnx", true)) //yolov
 
 #region yolov7
 
-using (var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true)) //yolov9 模型,需要 nms 操作
+using (var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true))
 {
     RunYolo(yolo, "yolov7");
 }
