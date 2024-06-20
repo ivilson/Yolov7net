@@ -3,6 +3,9 @@
 Fixed the bug where YOLOv10 inference results only contained one prediction.
 修正了 yolov10 推理结果只有一个的bug.
 
+![](https://raw.githubusercontent.com/ivilson/Yolov7net/master/demo_result_yolov10.jpg)
+
+
 ### 2024.6.12
 
 修正了了使用 skiasharp 预测框不准的问题。
