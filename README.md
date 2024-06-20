@@ -13,8 +13,13 @@ Fixed the bug where YOLOv10 inference results only contained one prediction.
 
 具体使用方法参考 demo 工程的 [Program.cs](https://github.com/ivilson/Yolov7net/blob/master/Yolov7net.Demo/Program.cs)
 
-最新的性能测试
-![](https://github.com/iwaitu/Yolov7net/raw/master/performance.png)
+# 最新的性能测试 Performance 
+
+work on i13900k + 64Gb Ram + RTX4090
+
+![](https://raw.githubusercontent.com/ivilson/Yolov7net/master/performance.png)
+
+
 
 ### 2024.6.9
 1. add yolov10 support.
@@ -78,11 +83,6 @@ The master branch has been renamed to net6.0. This change reflects our progressi
 The net8.0 branch has been renamed to master. This is now the main branch where the latest stable releases and active developments will happen.
 
 
-# Performance 
-
-work on i13900k + 64Gb Ram + RTX4090
-
-![](https://github.com/iwaitu/Yolov7net/raw/master/performance.png)
 
 
 
@@ -99,7 +99,7 @@ Usage:
 
 install-package IVilson.AI.Yolov7net
 
-![](https://github.com/ivilson/Yolov7net/raw/master/test/Yolov7net.test/Assets/demo.jpg)
+![](https://raw.githubusercontent.com/ivilson/Yolov7net/master/test/Yolov7net.test/Assets/demo.jpg)
 
 yolov9 和 yolov8 的 onnx 输出参数相同，都是 (1,84,8400)
 
@@ -192,7 +192,8 @@ foreach (var prediction in predictions) // iterate predictions to draw results
 
 
 ```
-![](https://github.com/iwaitu/Yolov7net/raw/master/result.jpg)
+![](https://raw.githubusercontent.com/ivilson/Yolov7net/master/result.jpg)
+
 # References & Acknowledgements
 
 https://github.com/THU-MIG/yolov10
