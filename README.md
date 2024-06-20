@@ -1,4 +1,5 @@
 ### 2024.6.21
+## 1.0.10 released
 
 Fixed the bug where YOLOv10 inference results only contained one prediction.
 修正了 yolov10 推理结果只有一个的bug.
