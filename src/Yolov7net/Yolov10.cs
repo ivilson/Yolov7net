@@ -1,6 +1,7 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SkiaSharp;
+using System.Collections.Concurrent;
 using Yolov7net.Extentions;
 using Yolov7net.Models;
 
@@ -60,9 +61,9 @@ namespace Yolov7net
             var gain = Math.Min(xGain, yGain);
             var (xPad, yPad) = ((_model.Width - w * gain) / 2, (_model.Height - h * gain) / 2);
 
-            for (int i = 0; i < output.Dimensions[0]; i++)
+            for (int i = 0; i < output.Dimensions[1]; i++)
             {
-                var span = output.Buffer.Span.Slice(i * output.Strides[0]);
+                var span = output.Buffer.Span.Slice(i * output.Strides[1]);
                 var label = _model.Labels[(int)span[5]];
                 var score = span[4];
 
@@ -117,7 +118,7 @@ namespace Yolov7net
         private void get_output_details()
         {
             _model.Outputs = _inferenceSession.OutputMetadata.Keys.ToArray();
-            _model.Dimensions = _inferenceSession.OutputMetadata[_model.Outputs[0]].Dimensions[1];
+            _model.Dimensions = _inferenceSession.OutputMetadata[_model.Outputs[0]].Dimensions[2];
             _model.UseDetect = !(_model.Outputs.Any(x => x == "score"));
         }
 

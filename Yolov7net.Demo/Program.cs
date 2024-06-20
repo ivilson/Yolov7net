@@ -33,7 +33,8 @@ var paintText = new SKPaint
 
 #region yolov5
 
-using (var yolo = new Yolov5("./assets/yolov5-tiny_640x640.onnx", true)) 
+using (var yolo = new Yolov5("./assets/yolov5-tiny_640x640.onnx", true))
+{ 
     RunYolo(yolo, "yolov5");
 }
 
@@ -76,7 +77,7 @@ using (var yolo = new Yolov10("./assets/yolov10n.onnx", true))
 void RunYolo(IYoloNet yolo,string remark="")
 {
     yolo.SetupYoloDefaultLabels();
-    using var image = SKBitmap.Decode("Assets/demo.jpg");
+    using var image = SKBitmap.Decode("Assets/dogcat.png");
     var predictions = yolo.Predict(image);
 
     using var canvas = new SKCanvas(image);
