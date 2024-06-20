@@ -91,8 +91,8 @@ namespace Yolov7net
                 Console.WriteLine($"Confidence Threshold: {confidenceThreshold}");
                 Console.WriteLine($"IoU Threshold: {iouThreshold}");
                 Console.WriteLine($"Output Path: {outputPath?.FullName}");
-                Console.WriteLine($"Labels Path: {customLabelsPath?.FullName}");
-                Console.WriteLine($"Labels: {customLabels}");
+                Console.WriteLine($"Labels Path: {customLabelsPath?.FullName ?? "None"}");
+                Console.WriteLine($"Labels: {customLabels ?? "None"}");
                 Console.WriteLine($"YOLO Version: {yoloVersion}");
                 await Task.Run(() => {
                     PerformInference(useCuda, modelPath, imagePath, confidenceThreshold, iouThreshold, outputPath, customLabelsPath, customLabels, yoloVersion);
@@ -143,15 +143,18 @@ namespace Yolov7net
                 {
                     var customLabels = LoadLabelsFromFile(labelsPath.FullName);
                     yoloNet.SetupLabels(customLabels);
+                    Console.WriteLine("Using custom file.");
                 }
                 else if (!string.IsNullOrEmpty(labels))
                 {
                     var customLabels = labels.Split(',');
                     yoloNet.SetupLabels(customLabels);
+                    Console.WriteLine("Using custom labels.");
                 }
                 else
                 {
                     yoloNet.SetupYoloDefaultLabels();
+                    Console.WriteLine("Using default labels.");
                 }
 
                 // 进行推理
