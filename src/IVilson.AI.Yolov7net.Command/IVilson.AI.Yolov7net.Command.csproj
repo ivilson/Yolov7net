@@ -3,12 +3,21 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>yolonet-cli</ToolCommandName>
+    <PackageId>YoloNetCli</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Yolo-cli</AssemblyName>
+    <Company>ivilson.com</Company>
+    <Authors>ivilson.com</Authors>
+    <PackageDescription>YOLO.NET CLI for object detection</PackageDescription>
+    <PackageTags>YOLO CLI object detection</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.18.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.Text.Json" Version="9.0.0-preview.5.24306.7" />
   </ItemGroup>
