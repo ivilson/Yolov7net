@@ -154,7 +154,7 @@ namespace Yolov7net
                 else
                 {
                     yoloNet.SetupYoloDefaultLabels();
-                    Console.WriteLine("Using default labels.");
+                    Console.WriteLine("Using Yolo Default Labels.");
                 }
 
                 // 进行推理
@@ -184,8 +184,7 @@ namespace Yolov7net
             }
             catch (Exception ex)
             {
-
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"Error predict image: {ex.Message}");
             }
             
         }
