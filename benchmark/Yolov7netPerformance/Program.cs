@@ -8,12 +8,14 @@ using Yolov7net.Extentions;
 public class YoloDetector
 {
     private const int RunCount = 1;
-    private readonly Yolov7 _yolov7 = new Yolov7("./assets/yolov7-tiny.onnx",true);
-    private readonly Yolov5 _yolov5 = new Yolov5("./assets/yolov5-tiny_640x640.onnx",true);
-    private readonly Yolov8 _yolov8 = new Yolov8("./assets/yolov8n.onnx", true);
-    private readonly Yolov9 _yolov9 = new Yolov9("./assets/yolov9-c.onnx", true);
-    private readonly Yolov10 _yolov10 = new Yolov10("./assets/yolov9-c.onnx", true);
-    private readonly SKBitmap _image = SKBitmap.Decode("Assets/2dog.jpg");
+    private readonly Yolov7 _yolov7 = new Yolov7("./assets/models/yolov7-tiny.onnx", true);
+    private readonly Yolov5 _yolov5 = new Yolov5("./assets/models/yolov5-tiny_640x640.onnx", true);
+    private readonly Yolov8 _yolov8 = new Yolov8("./assets/models/yolov8n.onnx", true);
+    private readonly Yolov9 _yolov9 = new Yolov9("./assets/models/yolov9-c.onnx", true);
+    private readonly Yolov10 _yolov10 = new Yolov10("./assets/models/yolov9-c.onnx", true);
+    private readonly Yolov11 _yolov11 = new Yolov11("./assets/models/yolo11n.onnx", true);
+    private readonly Yolov12 _yolov12 = new Yolov12("./assets/models/yolo12n.onnx", true);
+    private readonly SKBitmap _image = SKBitmap.Decode("Assets/images/2dog.jpg");
     private readonly SKBitmap _image640;
     
     

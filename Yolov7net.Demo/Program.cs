@@ -33,7 +33,7 @@ var paintText = new SKPaint
 
 #region yolov5
 
-using (var yolo = new Yolov5("./assets/yolov5-tiny_640x640.onnx", true))
+using (var yolo = new Yolov5("./assets/models/yolov5-tiny_640x640.onnx", true))
 { 
     RunYolo(yolo, "yolov5");
 }
@@ -43,7 +43,7 @@ using (var yolo = new Yolov5("./assets/yolov5-tiny_640x640.onnx", true))
 
 #region yolov7
 
-using (var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true))
+using (var yolo = new Yolov7("./assets/models/yolov7-tiny.onnx", true))
 {
     RunYolo(yolo, "yolov7");
 }
@@ -51,7 +51,7 @@ using (var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true))
 #endregion
 
 #region yolov8
-using (var yolo = new Yolov8("./assets/yolov8n.onnx", true))
+using (var yolo = new Yolov8("./assets/models/yolov8n.onnx", true))
 {
     RunYolo(yolo, "yolov8");
 }
@@ -59,7 +59,7 @@ using (var yolo = new Yolov8("./assets/yolov8n.onnx", true))
 #endregion
 
 #region yolov9
-using (var yolo = new Yolov9("./assets/yolov9-c.onnx", true))
+using (var yolo = new Yolov9("./assets/models/yolov9-c.onnx", true))
 {
     RunYolo(yolo, "yolov9");
 }
@@ -67,7 +67,7 @@ using (var yolo = new Yolov9("./assets/yolov9-c.onnx", true))
 #endregion
 
 #region yolov10
-using (var yolo = new Yolov10("./assets/yolov10n.onnx", true))
+using (var yolo = new Yolov10("./assets/models/yolov10n.onnx", true))
 {
     RunYolo(yolo, "yolov10");
 }
@@ -76,9 +76,18 @@ using (var yolo = new Yolov10("./assets/yolov10n.onnx", true))
 
 
 #region yolov11
-using (var yolo = new Yolov11("./assets/yolo11n.onnx", true))
+using (var yolo = new Yolov11("./assets/models/yolo11n.onnx", true))
 {
     RunYolo(yolo, "yolov11");
+}
+
+#endregion
+
+
+#region yolov11
+using (var yolo = new Yolov12("./assets/models/yolo12n.onnx", true))
+{
+    RunYolo(yolo, "yolov12");
 }
 
 #endregion
@@ -86,7 +95,7 @@ using (var yolo = new Yolov11("./assets/yolo11n.onnx", true))
 void RunYolo(IYoloNet yolo,string remark="")
 {
     yolo.SetupYoloDefaultLabels();
-    using var image = SKBitmap.Decode("Assets/dogcat.png");
+    using var image = SKBitmap.Decode("Assets/images/dogcat.png");
     var predictions = yolo.Predict(image,0.5f);
 
     using var canvas = new SKCanvas(image);

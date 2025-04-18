@@ -20,7 +20,7 @@ namespace Yolov7net.test
             int i = 0;
             foreach (var tuple in testFiles)
             {
-                var image = SKBitmap.Decode("Assets/" + tuple.fileName);
+                var image = SKBitmap.Decode("Assets/images/" + tuple.fileName);
                 array[i++] = (image, tuple.label);
 
                 // resized image should give the same result
@@ -34,7 +34,7 @@ namespace Yolov7net.test
         [Fact]
         public void SKBitmapTest()
         {
-            using var yolo = new Yolov8("./assets/yolov8n.onnx");
+            using var yolo = new Yolov8("./assets/models/yolov8n.onnx");
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
             Assert.NotNull(yolo);
 
@@ -45,7 +45,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov7()
         {
-            using var yolo = new Yolov7("./assets/yolov7-tiny.onnx", true); 
+            using var yolo = new Yolov7("./assets/models/yolov7-tiny.onnx", true); 
             
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -61,7 +61,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov5()
         {
-            using var yolo = new Yolov5("./assets/yolov7-tiny_640x640.onnx"); 
+            using var yolo = new Yolov5("./assets/models/yolov5-tiny_640x640.onnx",true); 
             
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -77,7 +77,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov8()
         {
-            using var yolo = new Yolov8("./assets/yolov8n.onnx",useCuda:true); 
+            using var yolo = new Yolov8("./assets/models/yolov8n.onnx", useCuda:true); 
             
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -94,7 +94,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov9()
         {
-            using var yolo = new Yolov9("./assets/yolov9-c.onnx"); 
+            using var yolo = new Yolov9("./assets/models/yolov9-c.onnx"); 
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -110,7 +110,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov10()
         {
-            using var yolo = new Yolov10("./assets/yolov10n.onnx"); 
+            using var yolo = new Yolov10("./assets/models/yolov10n.onnx"); 
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
@@ -126,7 +126,23 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov11()
         {
-            using var yolo = new Yolov11("./assets/yolo11n.onnx");
+            using var yolo = new Yolov11("./assets/models/yolo11n.onnx");
+
+            // setup labels of onnx model 
+            yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
+            Assert.NotNull(yolo);
+
+            foreach (var tuple in _testImages)
+            {
+                var ret = yolo.Predict(tuple.image);
+                CheckResult(ret, tuple.label);
+            }
+        }
+
+        [Fact]
+        public void TestYolov12()
+        {
+            using var yolo = new Yolov11("./assets/models/yolo12n.onnx");
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
