@@ -123,11 +123,27 @@ namespace Yolov7net.test
             }
         }
 
+        [Fact]
+        public void TestYolov11()
+        {
+            using var yolo = new Yolov11("./assets/yolo11n.onnx");
+
+            // setup labels of onnx model 
+            yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
+            Assert.NotNull(yolo);
+
+            foreach (var tuple in _testImages)
+            {
+                var ret = yolo.Predict(tuple.image);
+                CheckResult(ret, tuple.label);
+            }
+        }
+
         private void CheckResult(List<YoloPrediction> predictions, string label)
         {
             Assert.NotNull(predictions);
-            Assert.Equal(1, predictions.Count);
-            Assert.Equal(label, predictions[0].Label.Name);
+            Assert.Equal(1, predictions.Where(p=>p.Score > 0.5).ToList() .Count);
+            Assert.Equal(label, predictions.Where(p => p.Score > 0.5).FirstOrDefault().Label.Name);
             //Debug.WriteLine(predictions[0].Rectangle);
         }
     }

@@ -63,11 +63,19 @@ namespace Yolov7net
 
             for (int i = 0; i < output.Dimensions[1]; i++)
             {
-                var span = output.Buffer.Span.Slice(i * output.Strides[1]);
+                var span = output.Buffer.Span.Slice(i * output.Strides[1], 6);  // 获取每条检测的6个值
+
+                if (span.Length < 6)  // 检查 span 是否包含 6 个元素
+                    continue;  // 如果不够6个元素，跳过
+
+                if((int)span[5] > _model.Labels.Count)
+                {
+                    continue;
+                }
                 var label = _model.Labels[(int)span[5]];
                 var score = span[4];
 
-                if (score < _model.Confidence) continue;  // Skip detections below confidence threshold
+                if (score < _model.Confidence) continue;  // 跳过低于置信度阈值的检测
 
                 var xMin = (span[0] - xPad) / gain;
                 var yMin = (span[1] - yPad) / gain;
@@ -83,7 +91,6 @@ namespace Yolov7net
 
                 predictions.Add(prediction);
             }
-
             return predictions;
         }
 

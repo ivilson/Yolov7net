@@ -69,16 +69,25 @@ using (var yolo = new Yolov9("./assets/yolov9-c.onnx", true))
 #region yolov10
 using (var yolo = new Yolov10("./assets/yolov10n.onnx", true))
 {
-   RunYolo(yolo, "yolov10");
+    RunYolo(yolo, "yolov10");
 }
-   
+
+#endregion
+
+
+#region yolov11
+using (var yolo = new Yolov11("./assets/yolo11n.onnx", true))
+{
+    RunYolo(yolo, "yolov11");
+}
+
 #endregion
 
 void RunYolo(IYoloNet yolo,string remark="")
 {
     yolo.SetupYoloDefaultLabels();
     using var image = SKBitmap.Decode("Assets/dogcat.png");
-    var predictions = yolo.Predict(image);
+    var predictions = yolo.Predict(image,0.5f);
 
     using var canvas = new SKCanvas(image);
     foreach (var prediction in predictions) // 迭代预测结果并绘制
