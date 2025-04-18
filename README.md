@@ -1,4 +1,9 @@
-### 2024.6.21
+### 2025/4/18
+## 1.0.12 released
+
+添加 yolov11 和 yolov12 的支持.重构项目结构，减少冗余存储。
+
+## 2024.6.21
 ## 1.0.10 released
 
 Fixed the bug where YOLOv10 inference results only contained one prediction.
