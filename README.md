@@ -1,3 +1,14 @@
+# Yolov7net
+
+[![GitHub stars](https://img.shields.io/github/stars/ivilson/Yolov7net?style=social)](https://github.com/ivilson/Yolov7net/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/ivilson/Yolov7net?style=social)](https://github.com/ivilson/Yolov7net/network)
+[![GitHub issues](https://img.shields.io/github/issues/ivilson/Yolov7net)](https://github.com/ivilson/Yolov7net/issues)
+[![GitHub license](https://img.shields.io/github/license/ivilson/Yolov7net)](https://github.com/ivilson/Yolov7net/blob/main/LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/ivilson/Yolov7net)](https://github.com/ivilson/Yolov7net/commits/main)
+[![NuGet](https://img.shields.io/nuget/v/IVilson.AI.Yolov7net.svg)](https://www.nuget.org/packages/IVilson.AI.Yolov7net)
+[![Platform](https://img.shields.io/badge/platform-.NET-blueviolet)](https://dotnet.microsoft.com/)
+
+
 ### 2025/4/18
 ## 1.0.12 released
 
