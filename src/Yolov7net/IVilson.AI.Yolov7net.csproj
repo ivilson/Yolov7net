@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Authors>ivilson.com</Authors>
-    <Version>1.0.12</Version>
+    <Version>1.0.15</Version>
     <Description>yolov onnx interface for .net 8
 replace system.drawing with skiasharp for cross-platform support.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -17,8 +17,8 @@ replace system.drawing with skiasharp for cross-platform support.</Description>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.17.3" />
-    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
+    <PackageReference Include="SkiaSharp" Version="3.119.0" />
   </ItemGroup>
 
 </Project>

@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.17.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.22.1" />
   </ItemGroup>
 
   <ItemGroup>
