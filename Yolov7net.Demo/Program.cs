@@ -95,7 +95,7 @@ using (var yolo = new Yolov12("./assets/models/yolo12n.onnx", true))
 void RunYolo(IYoloNet yolo,string remark="")
 {
     yolo.SetupYoloDefaultLabels();
-    using var image = SKBitmap.Decode("Assets/images/dogcat.png");
+    using var image = SKBitmap.Decode("Assets/images/bug.jpg");
     var predictions = yolo.Predict(image,0.5f);
 
     using var canvas = new SKCanvas(image);
