@@ -8,6 +8,41 @@
 [![NuGet](https://img.shields.io/nuget/v/IVilson.AI.Yolov7net.svg)](https://www.nuget.org/packages/IVilson.AI.Yolov7net)
 [![Platform](https://img.shields.io/badge/platform-.NET-blueviolet)](https://dotnet.microsoft.com/)
 
+## Release Notes
+
+### 2025/8/8
+## 1.0.15 released
+
+**Major Bug Fix: Improved Detection Accuracy** 🎯
+
+Fixed a critical issue with bounding box coordinate accuracy that was affecting all YOLO model versions:
+
+**🔧 What was fixed:**
+- **Image preprocessing issue**: The original `ResizeImage` method was directly stretching images to target dimensions, causing image distortion and inaccurate detection results
+- **Missing letterbox processing**: YOLO models require proper letterbox preprocessing to maintain aspect ratio
+
+**✨ Improvements:**
+- **New letterbox implementation**: Images are now resized while maintaining aspect ratio with proper padding
+- **Consistent preprocessing**: All YOLO versions (v5, v7, v8, v9, v10, v11, v12) now use the same improved preprocessing
+- **Better coordinate accuracy**: Bounding boxes now align correctly with detected objects
+- **Standard YOLO preprocessing**: Uses gray padding (RGB: 128,128,128) as per YOLO standards
+
+**🧪 Technical Details:**
+```csharp
+// New letterbox processing maintains aspect ratio
+var scale = Math.Min(scaleWidth, scaleHeight);
+var newWidth = (int)(sourceWidth * scale);
+var newHeight = (int)(sourceHeight * scale);
+var padX = (targetWidth - newWidth) / 2;
+var padY = (targetHeight - newHeight) / 2;
+```
+
+**📊 Impact:**
+- Significantly improved detection accuracy across all model versions
+- More precise bounding box positioning
+- Better consistency between different YOLO model predictions
+
+This fix addresses the coordinate transformation issues that were causing detection boxes to appear in incorrect positions relative to the actual objects in the image.
 
 ### 2025/4/18
 ## 1.0.12 released
