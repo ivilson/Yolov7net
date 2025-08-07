@@ -69,23 +69,52 @@ namespace Yolov7net.Extentions
             return new DenseTensor<float>(new Memory<float>(channelData), new[] { 1, 3, image.Height, image.Width });
         }
 
+        /// <summary>
+        /// Resize image with letterbox (keeping aspect ratio and padding)
+        /// This is the proper way to resize images for YOLO models
+        /// </summary>
+        /// <param name="image">Source image</param>
+        /// <param name="targetWidth">Target width</param>
+        /// <param name="targetHeight">Target height</param>
+        /// <returns>Resized image with letterbox padding</returns>
         public static SKBitmap ResizeImage(SKBitmap image, int targetWidth, int targetHeight)
         {
-            var resized = new SKBitmap(targetWidth, targetHeight, image.ColorType, image.AlphaType);
-            using (var canvas = new SKCanvas(resized))
+            var sourceWidth = image.Width;
+            var sourceHeight = image.Height;
+            
+            // Calculate the scaling factor while maintaining aspect ratio
+            var scaleWidth = (float)targetWidth / sourceWidth;
+            var scaleHeight = (float)targetHeight / sourceHeight;
+            var scale = Math.Min(scaleWidth, scaleHeight);
+            
+            // Calculate new dimensions
+            var newWidth = (int)(sourceWidth * scale);
+            var newHeight = (int)(sourceHeight * scale);
+            
+            // Calculate padding to center the image
+            var padX = (targetWidth - newWidth) / 2;
+            var padY = (targetHeight - newHeight) / 2;
+            
+            // Create result bitmap
+            var result = new SKBitmap(targetWidth, targetHeight, image.ColorType, image.AlphaType);
+            using (var canvas = new SKCanvas(result))
             {
-                canvas.Clear(SKColors.Transparent);
+                // Fill with gray color (0.5 * 255 = 127.5 ≈ 128) - standard letterbox color
+                canvas.Clear(new SKColor(128, 128, 128));
+                
                 var paint = new SKPaint
                 {
                     FilterQuality = SKFilterQuality.High,
                     IsAntialias = true
                 };
-                canvas.DrawBitmap(image, SKRect.Create(0, 0, targetWidth, targetHeight), paint);
+                
+                // Draw the resized image centered
+                var destRect = SKRect.Create(padX, padY, newWidth, newHeight);
+                canvas.DrawBitmap(image, destRect, paint);
             }
-            return resized;
+            
+            return result;
         }
-
-        
 
         public static float Clamp(float value, float min, float max)
         {

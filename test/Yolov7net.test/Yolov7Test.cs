@@ -142,7 +142,7 @@ namespace Yolov7net.test
         [Fact]
         public void TestYolov12()
         {
-            using var yolo = new Yolov11("./assets/models/yolo12n.onnx");
+            using var yolo = new Yolov12("./assets/models/yolo12n.onnx");
 
             // setup labels of onnx model 
             yolo.SetupYoloDefaultLabels();   // use custom trained model should use your labels like: yolo.SetupLabels(string[] labels)
